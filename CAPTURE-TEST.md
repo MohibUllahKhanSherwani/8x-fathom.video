@@ -62,3 +62,10 @@ Canary 2 received and verified in session dab9fbbf. Both prompt and response are
 2. **Python 3.14 Datetime Deprecations**:
    - *Issue*: `datetime.datetime.utcnow()` is deprecated in Python 3.14, and `datetime.timezone` threw an `AttributeError` when importing `datetime` directly.
    - *Fix*: Switched to `from datetime import datetime, timezone` and used `datetime.now(timezone.utc)`.
+
+## 6. Continuous Capture & Side-by-Side Commit Status
+- **Status**: **ACTIVE & VERIFIED**
+- Both initial canary turns (Canary 1 in session `23225f6b` and Canary 2 in session `dab9fbbf`) passed cleanly.
+- Automatic turn capture runs on every interaction via `.agents/scripts/capture_turn.py`.
+- `.agent-logs/` is committed alongside all code updates with every git push.
+

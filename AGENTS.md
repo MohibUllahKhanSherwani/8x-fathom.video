@@ -24,21 +24,28 @@ Submission Target: 21 Sept 2026, 05:30 UTC
 
 ---
 
-## 3. Operating Rules (Section 0 of PRD)
-1. **Source of Truth**: `PRD.md` governs all feature scopes, acceptance criteria, and architectures. Follow section 0 and section 16 strictly.
-2. **Phase Execution**: Work strictly phase-by-phase. Each phase ends with:
+## 3. Operating Rules (Section 0 of PRD & 8x Brief)
+1. **Source of Truth**: `PRD.md` and the 8x assignment brief govern all feature scopes, acceptance criteria, and architectures. Follow section 0 and section 16 strictly. Never forget or deviate from the PRD and 8x requirements.
+2. **Side-by-Side Commits & Capture Logs**: Commit frequently alongside implementation. `.agent-logs/` must be committed and pushed with EVERY commit. Never rewrite history or delete entries.
+3. **Capture Test Integrity**: Keep `CAPTURE-TEST.md` updated and verify that automatic turn logging remains active throughout the entire project lifecycle.
+4. **Phase Execution**: Work strictly phase-by-phase. Each phase ends with:
    - Typecheck and lint pass (`npm run lint` / `npx tsc --noEmit`)
    - Commit & push interleaved with `.agent-logs/`
    - Verification in a private window / clean state
    - Checkbox ticked in `PROGRESS.md`
    - Key decisions logged in `DECISIONS.md`
-3. **Capture Logs**: `.agent-logs/` must be committed with every push. Never rewrite history or delete entries.
-4. **No Dead Ends**: No lorem ipsum. Every button and control must either work, be clearly labeled as simulated, or be removed.
-5. **Human Escalations**: Only ask the human for:
+5. **Prioritize What Matters (Product Judgement)**:
+   - Star meeting (8-person, 60-minute call with planted facts)
+   - Media & transcript sync (<100ms accuracy, auto-scroll, speaker identification)
+   - Real search (Postgres FTS across transcripts and metadata)
+   - Real AI summaries in multiple templates & Ask Fathom with citations
+6. **No Dead Ends**: No lorem ipsum. Every button and control must either work, be clearly labeled as simulated, or be removed.
+7. **Human Escalations**: Only ask the human for:
    - API keys and accounts (`.env` credentials from PRD section 14)
    - Approval for destructive actions
    - Decisions not covered in `PRD.md`
-6. **Design Fidelity**: Adhere to verified design tokens in `docs/design-tokens.md` extracted from live Fathom (`pics_of_flow/` and DOM).
-7. **Simulated vs Real**:
+8. **Design Fidelity**: Adhere to verified design tokens in `docs/design-tokens.md` extracted from live Fathom (`pics_of_flow/` and DOM).
+9. **Simulated vs Real Boundaries**:
    - **Simulated**: Zoom/Meet/Teams bot capture, Google/Zoom OAuth consent, integration Connect buttons, points.
    - **Real**: Audio-transcript sync, virtualized transcripts, AI summaries in multiple templates, action item extraction, search, Ask Fathom with citation chips, highlights, clips, share links, settings effects.
+

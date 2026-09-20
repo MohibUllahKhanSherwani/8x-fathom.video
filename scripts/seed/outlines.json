@@ -1,0 +1,160 @@
+{
+  "meetings": [
+    {
+      "id": "m1-q4-roadmap",
+      "slug": "q4-roadmap-planning",
+      "title": "Q4 Roadmap Planning",
+      "is_star": true,
+      "owner": "Alex Rivera",
+      "visibility": "private",
+      "duration_sec": 3600,
+      "seed_offset_minutes": 1440,
+      "platform": "zoom",
+      "is_external": false,
+      "participants": [
+        { "name": "Alex Rivera", "role": "Demo User / Host", "color": "#00b2ea", "is_host": true },
+        { "name": "Priya Nair", "role": "VP Product", "color": "#a855f7", "talk_pct": 30 },
+        { "name": "Daniel Okafor", "role": "Eng Manager", "color": "#3b82f6", "talk_pct": 20 },
+        { "name": "Mei Lin", "role": "Design Lead", "color": "#ec4899", "talk_pct": 10 },
+        { "name": "Carlos Ramirez", "role": "Sales Director", "color": "#f97316", "talk_pct": 10 },
+        { "name": "Hannah Weiss", "role": "Customer Success", "color": "#10b981", "talk_pct": 10 },
+        { "name": "Tom Becker", "role": "Data Lead", "color": "#eab308", "talk_pct": 10 },
+        { "name": "Aisha Khan", "role": "Marketing", "color": "#06b6d4", "talk_pct": 10 }
+      ],
+      "topics": [
+        { "title": "Opening & Agenda Review", "start_sec": 0 },
+        { "title": "Q3 Retrospective & Key Learnings", "start_sec": 360 },
+        { "title": "Q4 Priority 1: Self-Serve Onboarding", "start_sec": 900 },
+        { "title": "Launch Date Debate (Nov 4 vs Nov 18)", "start_sec": 1500 },
+        { "title": "Pricing & Packaging Restructure", "start_sec": 2100 },
+        { "title": "Customer Escalations & Analytics Blockers", "start_sec": 2700 },
+        { "title": "Offsite Tangent & Wrap-up / Action Items", "start_sec": 3300 }
+      ],
+      "planted_facts": {
+        "pricing_decision_owner": "Carlos Ramirez",
+        "proposed_launch_date": "November 4",
+        "final_agreed_launch_date": "November 18",
+        "hiring_impact": "Freezes senior backend role until Q1",
+        "offsite_location": "Lake Tahoe"
+      }
+    },
+    {
+      "id": "m2-northwind",
+      "slug": "discovery-northwind-logistics",
+      "title": "Discovery Call: Northwind Logistics",
+      "owner": "Alex Rivera",
+      "visibility": "private",
+      "duration_sec": 1680,
+      "seed_offset_minutes": 4320,
+      "platform": "zoom",
+      "is_external": true,
+      "participants": [
+        { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
+        { "name": "Carlos Ramirez", "color": "#f97316" },
+        { "name": "Sarah Jenkins", "is_external": true, "role": "VP Ops at Northwind", "color": "#6366f1" }
+      ]
+    },
+    {
+      "id": "m3-eng-standup",
+      "slug": "weekly-engineering-standup",
+      "title": "Weekly Engineering Standup",
+      "owner": "Alex Rivera",
+      "visibility": "private",
+      "duration_sec": 840,
+      "seed_offset_minutes": 180,
+      "platform": "meet",
+      "is_external": false,
+      "participants": [
+        { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
+        { "name": "Daniel Okafor", "color": "#3b82f6" },
+        { "name": "Tom Becker", "color": "#eab308" },
+        { "name": "Mei Lin", "color": "#ec4899" },
+        { "name": "Aisha Khan", "color": "#06b6d4" },
+        { "name": "Jordan Lee", "color": "#14b8a6" }
+      ]
+    },
+    {
+      "id": "m4-acme-qbr",
+      "slug": "acme-corp-qbr",
+      "title": "Acme Corp QBR",
+      "owner": "Alex Rivera",
+      "visibility": "private",
+      "duration_sec": 2100,
+      "seed_offset_minutes": 7200,
+      "platform": "teams",
+      "is_external": true,
+      "participants": [
+        { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
+        { "name": "Hannah Weiss", "color": "#10b981" },
+        { "name": "Mark Vance", "is_external": true, "role": "CTO at Acme", "color": "#ef4444" },
+        { "name": "Elena Rostova", "is_external": true, "role": "Product Lead at Acme", "color": "#8b5cf6" }
+      ]
+    },
+    {
+      "id": "m5-priya-1on1",
+      "slug": "1on1-priya-and-alex",
+      "title": "1:1 Priya and Alex",
+      "owner": "Alex Rivera",
+      "visibility": "private",
+      "duration_sec": 1320,
+      "seed_offset_minutes": 10080,
+      "platform": "zoom",
+      "is_external": false,
+      "participants": [
+        { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
+        { "name": "Priya Nair", "color": "#a855f7" }
+      ]
+    },
+    {
+      "id": "m6-frontend-interview",
+      "slug": "senior-frontend-interview",
+      "title": "Senior Frontend Interview",
+      "owner": "Alex Rivera",
+      "visibility": "private",
+      "duration_sec": 1500,
+      "seed_offset_minutes": 12960,
+      "platform": "zoom",
+      "is_external": true,
+      "participants": [
+        { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
+        { "name": "Daniel Okafor", "color": "#3b82f6" },
+        { "name": "Devin Wright", "is_external": true, "role": "Candidate", "color": "#64748b" }
+      ]
+    },
+    {
+      "id": "m7-marketing-sync",
+      "slug": "marketing-launch-sync",
+      "title": "Marketing Launch Sync",
+      "owner": "Aisha Khan",
+      "visibility": "team",
+      "duration_sec": 1080,
+      "seed_offset_minutes": 2880,
+      "platform": "meet",
+      "is_external": false,
+      "participants": [
+        { "name": "Aisha Khan", "is_host": true, "color": "#06b6d4" },
+        { "name": "Carlos Ramirez", "color": "#f97316" },
+        { "name": "Mei Lin", "color": "#ec4899" },
+        { "name": "Alex Rivera", "color": "#00b2ea" },
+        { "name": "Hannah Weiss", "color": "#10b981" }
+      ]
+    },
+    {
+      "id": "m8-escalation-review",
+      "slug": "support-escalation-review",
+      "title": "Support Escalation Review",
+      "owner": "Hannah Weiss",
+      "visibility": "team",
+      "duration_sec": 1200,
+      "seed_offset_minutes": 17280,
+      "platform": "teams",
+      "is_external": false,
+      "participants": [
+        { "name": "Hannah Weiss", "is_host": true, "color": "#10b981" },
+        { "name": "Daniel Okafor", "color": "#3b82f6" },
+        { "name": "Tom Becker", "color": "#eab308" },
+        { "name": "Alex Rivera", "color": "#00b2ea" }
+      ]
+    }
+  ]
+}

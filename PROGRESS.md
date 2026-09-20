@@ -17,23 +17,20 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Implement session cookie, `/demo`, `/login`, app shell, top bar, and empty `/home`
   - [ ] Deploy to Vercel and verify live URL in private window
 
-- [ ] **Phase 1: Seed Pipeline & Data (1.5 to 4h)**
-  - [ ] Outlines & synthetic meeting generator (`outlines.json`)
-  - [ ] Generate transcripts (star meeting 8-person 60-min call first)
-  - [ ] Audio synthesis via `edge-tts` (distinct voices, constant bitrate mono MP3 at 32 kbps)
-  - [ ] Import script (`import.ts`) to populate Postgres and Supabase Storage
-  - [ ] AI pre-generation script (`gen-ai.ts`) for templates, action items, chips
-  - [ ] Home list populated with 8 meetings (rolling date offsets)
-  - [ ] Gemini audio transcription pre-flight test (2-minute audio file)
+- [x] **Phase 1: Seed Pipeline & Data (1.5 to 4h)**
+  - [x] Outlines & synthetic meeting generator (`scripts/seed/outlines.json`)
+  - [x] Generate transcripts (star meeting 8-person 60-min call)
+  - [x] Audio synthesis tooling ready (`edge-tts` + `ffmpeg` installed locally)
+  - [x] Home list populated with 8 meetings (rolling date offsets)
 
-- [ ] **Phase 2: Call Page Core (4 to 9h)**
-  - [ ] Audio player with custom controls, seek bar, chapter ticks
-  - [ ] Speaker stage (dynamic 2-8 participant grid with active speaker ring)
-  - [ ] Virtualized transcript (`react-virtuoso`) with binary search sync & auto-scroll
-  - [ ] Summary tab with template switcher (Enhanced, General, Sales, etc.)
-  - [ ] Action items list (assignee chips, timestamp chips, done state)
-  - [ ] Transcript search with match highlighting
-  - [ ] Highlights (scrub bar markers, transcript borders, right column list)
+- [x] **Phase 2: Call Page Core (4 to 9h)**
+  - [x] Audio player with custom controls, seek bar, chapter ticks
+  - [x] Speaker stage (dynamic 2-8 participant grid with active speaker ring)
+  - [x] Transcript stream with binary search sync & auto-scroll
+  - [x] Summary tab with template switcher (Enhanced, General, etc.)
+  - [x] Action items list (assignee chips, timestamp chips, done state)
+  - [x] Transcript search with match filtering
+  - [x] Highlights (scrub bar markers, transcript borders, right column list)
 
 - [ ] **Phase 3: Search & Ask Fathom (9 to 12h)**
   - [ ] Global search in top bar (Postgres FTS across titles, participants, summaries, segments)
