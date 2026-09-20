@@ -44,4 +44,9 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 - **Decision**: Completely eliminate in-app static seed data dependencies from the UI. Home page, Call page, Share page, and Clip page dynamically fetch data from Supabase via API routes.
 - **Rationale**: The product must be true production-grade: meetings, participants, segments, summaries, and action items are queried live from Supabase PostgreSQL. Summary templates are generated on-demand via Gemini `gemini-3.6-flash` and cached in the database. Action items persist checked states and new items directly to the database. Global search executes live PostgreSQL Full-Text Search via GIN-indexed `tsv`.
 
+### D-011: Landing Page & Pricing Overhaul with Real Content & Exact User Screenshot Parity
+- **Decision**: Rebuild the landing page (`app/page.tsx`) to match the user's live screenshots 1-5 from `fathom.video` (announcement banner, dark starry space hero with floating astronaut and UI cards, social proof, retro rocket section, clarity neon portal, and 3-pillar stats). Create a real `/pricing` page matching `fathom.video/pricing` with full comparison matrix. Update home page to use `My Calls ⌵` dropdown selector for `Team Calls`.
+- **Rationale**: The user provided screenshots from live Fathom and requested zero stubs. Scraping and replicating real content from `fathom.video` and `fathom.video/pricing` ensures the application is completely authentic, functional, and faithful to the production product.
+
+
 
