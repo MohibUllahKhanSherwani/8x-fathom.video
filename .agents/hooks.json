@@ -1,0 +1,18 @@
+{
+  "8x-agent-capture": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python scripts/capture_turn.py",
+        "timeout": 30
+      }
+    ],
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "python scripts/capture_turn.py",
+        "timeout": 30
+      }
+    ]
+  }
+}
