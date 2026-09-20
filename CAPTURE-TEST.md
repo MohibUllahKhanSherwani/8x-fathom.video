@@ -21,12 +21,21 @@
 
 ## 4. Canary Entries (Raw)
 
-### Canary 1 (Current Session)
-*(Send prompt: `CAPTURE TEST — 8x assignment, Mohib Ullah Khan Sherwani`)*
+### Canary 1 (Current Session: `23225f6b`)
 
 ```
-[LOG_ENTRY type=PROMPT num=... session=23225f6b]
-...
+[LOG_ENTRY type=PROMPT num=4 session=23225f6b]
+timestamp: 2026-09-20T07:19:09.000Z
+model: gemini-3.8-flash
+
+CAPTURE TEST — 8x assignment, Mohib Ullah Khan Sherwani
+
+
+[LOG_ENTRY type=RESPONSE num=4 session=23225f6b]
+timestamp: 2026-09-20T07:19:25.000Z
+model: gemini-3.8-flash
+
+Canary 1 received and verified in session 23225f6b. Both prompt and response are captured in .agent-logs/2026-09-20_06-23-56_23225f6b-dc1d-4c00-9635-f2f12183ce94.md.
 ```
 
 ### Canary 2 (Second Session)
