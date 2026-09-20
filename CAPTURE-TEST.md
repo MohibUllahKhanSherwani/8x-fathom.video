@@ -17,11 +17,11 @@
 
 ## 3. Log File Path
 - Session 1 Log Path: `.agent-logs/2026-09-20_06-23-56_23225f6b-dc1d-4c00-9635-f2f12183ce94.md`
-- Session 2 Log Path: *(pending Canary 2 run)*
+- Session 2 Log Path: `.agent-logs/2026-09-20_07-19-49_dab9fbbf-8140-41d8-b412-f089bf52c03f.md`
 
 ## 4. Canary Entries (Raw)
 
-### Canary 1 (Current Session: `23225f6b`)
+### Canary 1 (First Session: `23225f6b`)
 
 ```
 [LOG_ENTRY type=PROMPT num=4 session=23225f6b]
@@ -38,12 +38,21 @@ model: gemini-3.8-flash
 Canary 1 received and verified in session 23225f6b. Both prompt and response are captured in .agent-logs/2026-09-20_06-23-56_23225f6b-dc1d-4c00-9635-f2f12183ce94.md.
 ```
 
-### Canary 2 (Second Session)
-*(Send prompt in second session: `CAPTURE TEST — 8x assignment, Mohib Ullah Khan Sherwani (session 2)`)*
+### Canary 2 (Second Session: `dab9fbbf`)
 
 ```
-[LOG_ENTRY type=PROMPT num=... session=...]
-...
+[LOG_ENTRY type=PROMPT num=1 session=dab9fbbf]
+timestamp: 2026-09-20T07:19:49.000Z
+model: gemini-3.8-flash-high
+
+CAPTURE TEST — 8x assignment, Mohib Ullah Khan Sherwani (session 2)
+
+
+[LOG_ENTRY type=RESPONSE num=1 session=dab9fbbf]
+timestamp: 2026-09-20T07:20:30.000Z
+model: gemini-3.8-flash-high
+
+Canary 2 received and verified in session dab9fbbf. Both prompt and response are captured in .agent-logs/2026-09-20_07-19-49_dab9fbbf-8140-41d8-b412-f089bf52c03f.md.
 ```
 
 ## 5. Troubleshooting & What Was Attempted
