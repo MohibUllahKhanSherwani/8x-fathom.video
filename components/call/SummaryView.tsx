@@ -21,6 +21,8 @@ interface SummaryViewProps {
 export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: SummaryViewProps) {
   const [selectedTemplate, setSelectedTemplate] = useState("Enhanced");
   const [selectedLanguage, setSelectedLanguage] = useState("Auto");
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [generatedSummaries, setGeneratedSummaries] = useState<Record<string, SummaryContent>>({});
@@ -141,24 +143,19 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
       <div className="p-4 border-b border-[#26282d] flex flex-wrap items-center justify-between gap-3">
         {/* Template & Language Controls */}
         <div className="flex items-center gap-2">
-          {/* Template Button with Gear */}
-          <div className="flex items-center bg-[#1e2024] hover:bg-[#26282d] border border-[#2f3238] rounded-lg">
-            <div className="relative">
-              <select
-                value={selectedTemplate}
-                onChange={(e) => setSelectedTemplate(e.target.value)}
-                className="h-8 pl-3 pr-7 bg-transparent text-xs font-semibold text-white outline-none cursor-pointer appearance-none"
-              >
-                <option value="Enhanced">Enhanced</option>
-                <option value="General">General</option>
-                <option value="Sales Discovery">Sales Discovery</option>
-                <option value="Customer Success">Customer Success</option>
-                <option value="Stand-up">Stand-up</option>
-                <option value="1:1">1:1</option>
-                <option value="Interview">Interview</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#9a9ba1] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+          {/* Custom Template Dropdown */}
+          <div className="relative flex items-center bg-[#1e2024] hover:bg-[#26282d] border border-[#2f3238] rounded-lg">
+            <button
+              type="button"
+              onClick={() => {
+                setIsTemplateOpen(!isTemplateOpen);
+                setIsLanguageOpen(false);
+              }}
+              className="h-8 pl-3 pr-2.5 flex items-center gap-2 text-xs font-semibold text-white cursor-pointer"
+            >
+              <span>{selectedTemplate}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-[#9a9ba1] transition-transform duration-150 ${isTemplateOpen ? "rotate-180 text-[#00b2ea]" : ""}`} />
+            </button>
             <button
               onClick={() => setShowTemplateModal(true)}
               className="h-8 px-2 border-l border-[#2f3238] hover:text-[#00b2ea] text-[#9a9ba1] transition-colors cursor-pointer"
@@ -166,23 +163,84 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
             >
               <Settings className="w-3.5 h-3.5" />
             </button>
+
+            {/* Template Menu */}
+            {isTemplateOpen && (
+              <div className="absolute top-9 left-0 w-48 rounded-xl bg-[#16181f] border border-[#2e313b] shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                {[
+                  "Enhanced",
+                  "General",
+                  "Sales Discovery",
+                  "Customer Success",
+                  "Stand-up",
+                  "1:1",
+                  "Interview",
+                ].map((tmpl) => (
+                  <button
+                    key={tmpl}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTemplate(tmpl);
+                      setIsTemplateOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-[#222634] transition-colors cursor-pointer ${
+                      selectedTemplate === tmpl
+                        ? "text-[#00b2ea] font-semibold bg-[#00b2ea]/10"
+                        : "text-[#d1d5db] hover:text-white"
+                    }`}
+                  >
+                    <span>{tmpl}</span>
+                    {selectedTemplate === tmpl && <Check className="w-3.5 h-3.5 text-[#00b2ea]" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Auto / Language Dropdown with Sparkles */}
+          {/* Custom Auto / Language Dropdown with Sparkles */}
           <div className="relative flex items-center bg-[#1e2024] hover:bg-[#26282d] border border-[#2f3238] rounded-lg">
-            <Sparkles className="w-3.5 h-3.5 text-[#9a9ba1] ml-2.5 pointer-events-none" />
-            <select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="h-8 pl-2 pr-7 bg-transparent text-xs font-semibold text-white outline-none cursor-pointer appearance-none"
+            <button
+              type="button"
+              onClick={() => {
+                setIsLanguageOpen(!isLanguageOpen);
+                setIsTemplateOpen(false);
+              }}
+              className="h-8 pl-2.5 pr-2.5 flex items-center gap-1.5 text-xs font-semibold text-white cursor-pointer"
             >
-              <option value="Auto">Auto</option>
-              <option value="US EN">US EN</option>
-              <option value="ES">Spanish</option>
-              <option value="FR">French</option>
-              <option value="DE">German</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-[#9a9ba1] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Sparkles className="w-3.5 h-3.5 text-[#00b2ea]" />
+              <span>{selectedLanguage}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-[#9a9ba1] transition-transform duration-150 ${isLanguageOpen ? "rotate-180 text-[#00b2ea]" : ""}`} />
+            </button>
+
+            {/* Language Menu */}
+            {isLanguageOpen && (
+              <div className="absolute top-9 left-0 w-36 rounded-xl bg-[#16181f] border border-[#2e313b] shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                {[
+                  { id: "Auto", label: "Auto" },
+                  { id: "US EN", label: "English" },
+                  { id: "ES", label: "Spanish" },
+                  { id: "FR", label: "French" },
+                  { id: "DE", label: "German" },
+                ].map((lang) => (
+                  <button
+                    key={lang.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLanguage(lang.id);
+                      setIsLanguageOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-[#222634] transition-colors cursor-pointer ${
+                      selectedLanguage === lang.id
+                        ? "text-[#00b2ea] font-semibold bg-[#00b2ea]/10"
+                        : "text-[#d1d5db] hover:text-white"
+                    }`}
+                  >
+                    <span>{lang.label}</span>
+                    {selectedLanguage === lang.id && <Check className="w-3.5 h-3.5 text-[#00b2ea]" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

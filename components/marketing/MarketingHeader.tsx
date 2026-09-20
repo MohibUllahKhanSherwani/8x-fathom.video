@@ -209,7 +209,7 @@ export function MarketingHeader({ currentPath = "/" }: MarketingHeaderProps) {
                           <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <p className="text-[11px] text-[#8e909a] mt-0.5 leading-snug">
-                          Bot-free discreet recording for 1-on-1s, board meetings & strategy.
+                          Discreet automatic recording for 1-on-1s, board meetings & strategy.
                         </p>
                       </div>
                     </Link>
@@ -348,7 +348,7 @@ export function MarketingHeader({ currentPath = "/" }: MarketingHeaderProps) {
                   </div>
 
                   <div className="mt-3 pt-3 border-t border-[#232734] flex items-center justify-between px-2 text-[11px]">
-                    <span className="text-[#8e909a]">Bot-free capture available on all platforms</span>
+                    <span className="text-[#8e909a]">Automatic capture available on all platforms</span>
                     <Link
                       href="/pricing"
                       onClick={() => setActiveDropdown(null)}

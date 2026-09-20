@@ -33,7 +33,7 @@ export default function PricingPage() {
         "AI generated action items",
         "Conversational meeting assistant",
         "Playlists of highlights from meetings",
-        "Choice of bot-free or bot capture",
+        "Seamless background meeting capture",
         "Clips, playlists + search across calls",
         "Integration with Zoom, Google Meet & Microsoft Teams",
       ],
@@ -111,12 +111,12 @@ export default function PricingPage() {
       name: "Capturing & Managing Content",
       features: [
         {
-          name: "Choice of bot-free and bot capture",
+          name: "Seamless background meeting capture",
           free: true,
           team: true,
           business: true,
           enterprise: true,
-          note: "Bot-free available for Zoom, Meet, Teams",
+          note: "Available for Zoom, Meet, Teams",
         },
         {
           name: "Recordings & call storage",
@@ -290,8 +290,8 @@ export default function PricingPage() {
       a: "Yes! Fathom's Free plan has no time limits, no trial expiration, and no recording caps. You get unlimited recordings, instant AI summaries, transcription, clips, and conversational Ask Fathom for yourself.",
     },
     {
-      q: "What is the difference between Bot and Bot-Free capture?",
-      a: "Fathom supports both! Traditional bot capture invites a visible Fathom bot to your Zoom, Google Meet, or Microsoft Teams meeting. Bot-free capture (available for Mac and browser) captures audio and video directly without requiring an external participant in the call.",
+      q: "How does Fathom capture meetings across platforms?",
+      a: "Fathom works seamlessly across Zoom, Google Meet, and Microsoft Teams. It automatically records audio and video, transcribes speaker turns, and delivers instant AI summaries within seconds of your meeting ending.",
     },
     {
       q: "Can I use Fathom with my existing CRM?",

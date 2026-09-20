@@ -45,7 +45,7 @@ export default function RootLandingPage() {
 
             <p className="text-base sm:text-lg text-[#9a9ba1] max-w-xl leading-relaxed font-normal">
               Fathom summarizes your meetings so you can focus on the conversation.{" "}
-              <strong className="text-white font-semibold">Now available bot-free.</strong>
+              <strong className="text-white font-semibold">Available for Zoom, Meet &amp; Teams.</strong>
             </p>
 
             <div className="pt-2">
@@ -104,13 +104,13 @@ export default function RootLandingPage() {
                 <div className="px-2.5 py-1.5 rounded-lg bg-[#222633] text-white font-semibold flex items-center justify-between border border-[#00b2ea]/40">
                   <span>🎧 Audio</span>
                   <span className="text-[9px] font-bold uppercase bg-[#00b2ea]/20 text-[#00b2ea] px-1.5 py-0.5 rounded">
-                    BOT-FREE
+                    DIRECT
                   </span>
                 </div>
                 <div className="px-2.5 py-1.5 rounded-lg text-[#9a9ba1] flex items-center justify-between">
                   <span>📝 Transcript only</span>
                   <span className="text-[9px] font-bold uppercase bg-[#2b2f3d] text-[#9a9ba1] px-1.5 py-0.5 rounded">
-                    BOT-FREE
+                    DIRECT
                   </span>
                 </div>
                 <div className="px-2.5 py-1.5 rounded-lg text-[#ef4444] flex items-center gap-1.5">
