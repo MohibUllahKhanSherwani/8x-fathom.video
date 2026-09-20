@@ -1,0 +1,68 @@
+# Build Progress
+
+Assignment: Fathom Rebuild (8x Assignment)
+Deadline: 21 Sept 2026, 06:27 UTC (11:27 PKT)
+Feature Freeze: 21 Sept 2026, 02:57 UTC
+Submission Target: 21 Sept 2026, 05:30 UTC
+
+---
+
+## Phase Checklist
+
+- [ ] **Phase 0: Scaffold & Foundation (0 to 1.5h)**
+  - [x] Create `AGENTS.md`, `PROGRESS.md`, `DECISIONS.md`
+  - [x] Scaffold Next.js (App Router, TypeScript, Tailwind)
+  - [x] Inspect live Fathom sites (`fathom.video`, `fathom.ai/overview`) & write `docs/design-tokens.md`
+  - [x] Write Supabase migration (from section 11)
+  - [x] Implement session cookie, `/demo`, `/login`, app shell, top bar, and empty `/home`
+  - [ ] Deploy to Vercel and verify live URL in private window
+
+- [ ] **Phase 1: Seed Pipeline & Data (1.5 to 4h)**
+  - [ ] Outlines & synthetic meeting generator (`outlines.json`)
+  - [ ] Generate transcripts (star meeting 8-person 60-min call first)
+  - [ ] Audio synthesis via `edge-tts` (distinct voices, constant bitrate mono MP3 at 32 kbps)
+  - [ ] Import script (`import.ts`) to populate Postgres and Supabase Storage
+  - [ ] AI pre-generation script (`gen-ai.ts`) for templates, action items, chips
+  - [ ] Home list populated with 8 meetings (rolling date offsets)
+  - [ ] Gemini audio transcription pre-flight test (2-minute audio file)
+
+- [ ] **Phase 2: Call Page Core (4 to 9h)**
+  - [ ] Audio player with custom controls, seek bar, chapter ticks
+  - [ ] Speaker stage (dynamic 2-8 participant grid with active speaker ring)
+  - [ ] Virtualized transcript (`react-virtuoso`) with binary search sync & auto-scroll
+  - [ ] Summary tab with template switcher (Enhanced, General, Sales, etc.)
+  - [ ] Action items list (assignee chips, timestamp chips, done state)
+  - [ ] Transcript search with match highlighting
+  - [ ] Highlights (scrub bar markers, transcript borders, right column list)
+
+- [ ] **Phase 3: Search & Ask Fathom (9 to 12h)**
+  - [ ] Global search in top bar (Postgres FTS across titles, participants, summaries, segments)
+  - [ ] Ask Fathom (per-call tab): streaming SSE, citation chips, cached suggestion chips
+  - [ ] Ask Fathom (account-level home panel): date phrase parsing (`chrono-node`), multi-call context
+
+- [ ] **Phase 4: Sharing & Team Calls (12 to 14h)**
+  - [ ] Share popover & configuration (summary, transcript, recording toggles)
+  - [ ] Public read-only share page (`/share/[token]`)
+  - [ ] Clips creation & public clip player (`/clip/[token]`)
+  - [ ] Team Calls tab (`visibility = team`)
+
+- [ ] **Phase 5: Landing Page (14 to 16h - Timeboxed 90m)**
+  - [ ] Match `fathom.ai/overview` structure, dark theme, typography, hero, cards, testimonials
+  - [ ] Ensure all CTAs link to `/login` or `/demo`
+
+- [ ] **Phase 6: Settings, Onboarding & Simulated Capture (16 to 18h)**
+  - [ ] Settings page with functional effects (default template, bot name, auto-actions)
+  - [ ] Onboarding flow (Google consent -> use case -> Zoom connect -> test call prompt)
+  - [ ] Simulated capture bot flow (host permission dialog, REC state, processing steps)
+
+- [ ] **Phase 7: Real Upload Pipeline (18 to 20h)**
+  - [ ] Direct-to-storage signed uploads (bypass Vercel 4.5MB limit)
+  - [ ] Server pipeline (`POST /api/meetings/[id]/process`) with Gemini audio transcription
+  - [ ] Step-by-step processing status polling (`/api/meetings/[id]/status`)
+
+- [ ] **Phase 8: Polish, QA & Walkthrough (20 to 22h)**
+  - [ ] Run QA checklist against live deployment
+  - [ ] Complete `README.md` and verify `DECISIONS.md`
+  - [ ] Verify `.agent-logs/` is complete and up to date
+  - [ ] Record 5-min walkthrough video (camera on, voiceover)
+  - [ ] Final submission verification
