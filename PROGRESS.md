@@ -49,13 +49,13 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Match `fathom.ai/overview` structure, dark theme, typography, hero, cards, testimonials
   - [x] Ensure all CTAs link to `/login` or `/demo`
 
-- [ ] **Phase 6: Settings, Onboarding & Simulated Capture (16 to 18h)**
-
-  - [ ] Settings page with functional effects (default template, bot name, auto-actions)
-  - [ ] Onboarding flow (Google consent -> use case -> Zoom connect -> test call prompt)
-  - [ ] Simulated capture bot flow (host permission dialog, REC state, processing steps)
+- [x] **Phase 6: Settings, Onboarding & Simulated Capture (16 to 18h)**
+  - [x] Settings page with functional effects (default template, bot name, auto-actions)
+  - [x] Onboarding flow (Google consent -> use case -> Zoom connect -> test call prompt)
+  - [x] Simulated capture bot flow (host permission dialog, REC state, processing steps)
 
 - [ ] **Phase 7: Real Upload Pipeline (18 to 20h)**
+
   - [ ] Direct-to-storage signed uploads (bypass Vercel 4.5MB limit)
   - [ ] Server pipeline (`POST /api/meetings/[id]/process`) with Gemini audio transcription
   - [ ] Step-by-step processing status polling (`/api/meetings/[id]/status`)
