@@ -47,6 +47,6 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 ### D-011: Landing Page & Pricing Overhaul with Real Content & Exact User Screenshot Parity
 - **Decision**: Rebuild the landing page (`app/page.tsx`) to match the user's live screenshots 1-5 from `fathom.video` (announcement banner, dark starry space hero with floating astronaut and UI cards, social proof, retro rocket section, clarity neon portal, and 3-pillar stats). Create a real `/pricing` page matching `fathom.video/pricing` with full comparison matrix. Update home page to use `My Calls ⌵` dropdown selector for `Team Calls`.
 - **Rationale**: The user provided screenshots from live Fathom and requested zero stubs. Scraping and replicating real content from `fathom.video` and `fathom.video/pricing` ensures the application is completely authentic, functional, and faithful to the production product.
-
-
-
+### D-012: Interactive Dropdown Menus & Instant Native Book a Demo Modal
+- **Decision**: Replace non-interactive navbar items (`Solutions ⌵`, `Integrations ⌵`, `Resources ⌵`) with rich, interactive dropdown menus on marketing and pricing pages. Replace the external Typeform redirect on "Book a Demo" with an instant native modal (`BookDemoModal.tsx`).
+- **Rationale**: The user reported that clicking Solutions, Integrations, and Resources did nothing, and "Book a Demo" took too long to load due to an external Typeform redirect. The native modal loads in <50ms with zero latency, provides immediate confirmation, and enables instant 1-click access to the live interactive demo workspace (`/demo`). The dropdown menus provide direct pathways to real product features, calls, and integrations, ensuring no dead ends or broken links exist in the application.

@@ -4,12 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowRight,
   Sparkles,
   Play,
   Lock,
-  ChevronDown,
-  X,
   Mic,
   Plus,
   Send,
@@ -17,89 +14,17 @@ import {
   Users2,
   UserCheck,
 } from "lucide-react";
-import { Logo, FathomSwoosh } from "@/components/brand/Logo";
+import { MarketingHeader } from "@/components/marketing/MarketingHeader";
+import { FathomSwoosh } from "@/components/brand/Logo";
 
 export default function RootLandingPage() {
-  const [showBanner, setShowBanner] = useState(true);
   const [audienceTab, setAudienceTab] = useState<"teams" | "individuals">("teams");
   const [clarityTab, setClarityTab] = useState<"clarity" | "momentum" | "ease">("clarity");
 
   return (
     <div className="min-h-screen bg-[#07080a] text-white flex flex-col selection:bg-[#00b2ea]/30 selection:text-white font-sans overflow-x-hidden">
-      {/* 1. TOP ANNOUNCEMENT BANNER */}
-      {showBanner && (
-        <div className="bg-[#ffffff] text-[#111214] text-xs font-semibold py-2 px-4 flex items-center justify-between z-40 border-b border-[#e2e8f0]">
-          <div className="flex-1 text-center flex items-center justify-center gap-2">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#111214] text-white font-black text-[10px]">
-              A+
-            </span>
-            <span className="tracking-wide">FATHOM IS NOW PART OF SUPERHUMAN.</span>
-            <a
-              href="https://fathom.video"
-              target="_blank"
-              rel="noreferrer"
-              className="underline hover:text-[#00b2ea] transition-colors ml-1 font-bold inline-flex items-center gap-1"
-            >
-              LEARN MORE <ArrowRight className="w-3 h-3 inline" />
-            </a>
-          </div>
-          <button
-            onClick={() => setShowBanner(false)}
-            className="text-[#64748b] hover:text-[#111214] transition-colors p-1"
-            aria-label="Close banner"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* 2. NAVIGATION HEADER */}
-      <header className="h-16 border-b border-[#1f232b]/80 px-6 lg:px-12 flex items-center justify-between sticky top-0 bg-[#07080a]/90 backdrop-blur-md z-30">
-        <div className="flex items-center gap-10">
-          <Logo href="/" size="lg" />
-
-          <nav className="hidden lg:flex items-center gap-1 bg-[#13151b] border border-[#252834] rounded-full px-4 py-1.5 text-xs text-[#9a9ba1] font-medium shadow-inner">
-            <Link href="/" className="px-3 py-1 text-white font-semibold">
-              Overview
-            </Link>
-            <span className="px-3 py-1 hover:text-white transition-colors cursor-pointer flex items-center gap-1">
-              Solutions <ChevronDown className="w-3 h-3" />
-            </span>
-            <span className="px-3 py-1 hover:text-white transition-colors cursor-pointer flex items-center gap-1">
-              Integrations <ChevronDown className="w-3 h-3" />
-            </span>
-            <span className="px-3 py-1 hover:text-white transition-colors cursor-pointer flex items-center gap-1">
-              Resources <ChevronDown className="w-3 h-3" />
-            </span>
-            <Link href="/pricing" className="px-3 py-1 hover:text-white transition-colors">
-              Pricing
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <a
-            href="https://fathomvideo.typeform.com/to/AYeoqHBS"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden sm:block text-xs font-semibold text-[#d1d5db] hover:text-white transition-colors"
-          >
-            Book a Demo
-          </a>
-          <Link
-            href="/login"
-            className="text-xs font-semibold text-[#d1d5db] hover:text-white transition-colors"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/demo"
-            className="h-9 px-5 bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-bold text-xs rounded-full flex items-center gap-1.5 transition-all shadow-md shadow-[#00b2ea]/20 cursor-pointer"
-          >
-            SIGN UP FREE
-          </Link>
-        </div>
-      </header>
+      {/* Interactive Navigation Header & Announcement */}
+      <MarketingHeader currentPath="/" />
 
       {/* 3. HERO SECTION (Screenshot 1) */}
       <section className="relative min-h-[680px] lg:min-h-[740px] px-6 lg:px-12 pt-16 pb-20 flex flex-col justify-center overflow-hidden">
