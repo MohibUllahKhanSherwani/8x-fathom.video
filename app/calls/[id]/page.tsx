@@ -371,6 +371,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             {activeTab === "ask" && (
               <AskFathomView
                 meetingTitle={meeting.title}
+                meetingId={meeting.id}
                 onSeek={handleSeek}
               />
             )}

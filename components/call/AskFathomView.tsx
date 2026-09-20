@@ -6,6 +6,7 @@ import { FathomSwoosh } from "@/components/brand/Logo";
 
 interface AskFathomViewProps {
   meetingTitle: string;
+  meetingId?: string;
   onSeek: (ms: number) => void;
 }
 
@@ -15,70 +16,23 @@ interface ChatMessage {
   citations?: Array<{ label: string; ms: number }>;
 }
 
-const PRECACHED_CHIPS: Record<
-  string,
-  { answer: string; citations: Array<{ label: string; ms: number }> }
-> = {
-  "Propose insightful follow-up questions": {
-    answer:
-      "Based on the discussion, here are 3 high-impact follow-up questions:\n\n1. For Carlos Ramirez: If the Pro tier launch on Nov 18 experiences lower self-serve conversion than modeled, what is the contingency discount threshold for enterprise pipeline?\n2. For Daniel Okafor: What specific synthetic load thresholds are required during the 2-week staging soak test to declare database migrations safe?\n3. For Hannah Weiss: How will Customer Success proactively track beta teams transitioning to paid after their 90-day grace period?",
-    citations: [
-      { label: "24:30", ms: 1470000 },
-      { label: "36:00", ms: 2160000 },
-    ],
-  },
-  "What challenges do you foresee?": {
-    answer:
-      "Two primary risks were identified in this meeting:\n\n1. Database Migration & Audio Queue Latency: Daniel strongly pushed back against the Nov 4 launch because staging tests need two full weeks to prevent audio queue bottlenecks under 10x traffic.\n2. Acme Corp SOC 2 Compliance Dependency: Acme's 500-seat expansion requires the SOC 2 Type II audit report by October 15th, making any audit slip an immediate revenue risk.",
-    citations: [
-      { label: "25:20", ms: 1522000 },
-      { label: "46:30", ms: 2790000 },
-    ],
-  },
-  "What would help make progress?": {
-    answer:
-      "Key accelerators agreed upon by leadership:\n\n1. Finalizing the self-serve onboarding prototypes by Wednesday (owned by Mei Lin).\n2. Deploying Postgres FTS GIN indexes by tomorrow to keep search queries sub-50ms without warehouse sync lag (owned by Tom Becker).\n3. Locking in the pricing sheet and discount approval matrix by Friday 5 PM (owned by Carlos Ramirez).",
-    citations: [
-      { label: "37:00", ms: 2225000 },
-      { label: "47:40", ms: 2860000 },
-      { label: "54:40", ms: 3280000 },
-    ],
-  },
-  "What was surprising in this meeting?": {
-    answer:
-      "The most surprising revelation was that transcription turnaround was reduced by nearly 80% (from 4 minutes down to 45 seconds) in Q3 after the engineering pipeline refactoring, but Snowflake query costs spiked by 40% due to unindexed meeting segment lookups.",
-    citations: [
-      { label: "06:19", ms: 379000 },
-      { label: "06:36", ms: 396000 },
-    ],
-  },
-};
+const PROMPT_CHIPS = [
+  "Propose insightful follow-up questions",
+  "What challenges do you foresee?",
+  "What would help make progress?",
+  "What was surprising in this meeting?",
+];
 
-export function AskFathomView({ onSeek }: AskFathomViewProps) {
+export function AskFathomView({ meetingId, onSeek }: AskFathomViewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputQuery, setInputQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleChipClick = (chipTitle: string) => {
-    const cached = PRECACHED_CHIPS[chipTitle];
-    if (!cached) return;
+  const handleSend = async (queryOverride?: string) => {
+    const userText = (queryOverride || inputQuery).trim();
+    if (!userText || isTyping) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", text: chipTitle },
-      {
-        role: "assistant",
-        text: cached.answer,
-        citations: cached.citations,
-      },
-    ]);
-  };
-
-  const handleSend = async () => {
-    if (!inputQuery.trim() || isTyping) return;
-
-    const userText = inputQuery.trim();
-    setInputQuery("");
+    if (!queryOverride) setInputQuery("");
     setIsTyping(true);
 
     // Add user message
@@ -88,12 +42,14 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userText, meetingId: "829997322" }),
+        body: JSON.stringify({ query: userText, meetingId: meetingId || "829997321" }),
       });
 
-      if (!res.ok) throw new Error("API error");
-
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to query Gemini AI");
+      }
+
       setMessages((prev) => [
         ...prev,
         {
@@ -102,44 +58,22 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
           citations: data.citations,
         },
       ]);
-    } catch {
-      // Fallback to local planted facts
-      let reply = "";
-      let citations: Array<{ label: string; ms: number }> = [];
-
-      const lower = userText.toLowerCase();
-      if (lower.includes("pricing") || lower.includes("who owns")) {
-        reply =
-          "Carlos Ramirez owns the pricing decision and the discount approval matrix. He committed to finalizing the complete pricing sheet by Friday at 5 PM.";
-        citations = [{ label: "37:05", ms: 2225000 }];
-      } else if (lower.includes("launch") || lower.includes("date")) {
-        reply =
-          "The official launch date is November 18th. Marketing originally proposed November 4th for the SaaS Summit, but Daniel Okafor pushed back to ensure adequate staging soak tests.";
-        citations = [
-          { label: "24:30", ms: 1470000 },
-          { label: "27:00", ms: 1620000 },
-        ];
-      } else if (lower.includes("offsite")) {
-        reply =
-          "The team offsite is confirmed for Lake Tahoe from October 24th to 26th. Priya confirmed that cabins and team dinners are booked.";
-        citations = [{ label: "54:14", ms: 3254000 }];
-      } else if (lower.includes("acme") || lower.includes("soc 2")) {
-        reply =
-          "Acme Corp requires our final SOC 2 Type II audit report before signing their 500-seat expansion. Daniel confirmed the report will be delivered by October 15th.";
-        citations = [{ label: "46:50", ms: 2810000 }];
-      } else {
-        reply =
-          "Based on the transcript, this meeting focused on Q4 Roadmap Planning, including self-serve onboarding as Priority 1, the November 18th launch date, and Pro tier packaging at $19/user/month.";
-        citations = [{ label: "01:11", ms: 71400 }];
-      }
-
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error querying Gemini AI";
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: reply, citations },
+        {
+          role: "assistant",
+          text: `⚠️ ${msg}`,
+        },
       ]);
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleChipClick = (chipTitle: string) => {
+    handleSend(chipTitle);
   };
 
 
@@ -160,7 +94,7 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
 
             {/* 2x2 Suggestion Chips Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-              {Object.keys(PRECACHED_CHIPS).map((chip, idx) => (
+              {PROMPT_CHIPS.map((chip, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleChipClick(chip)}
@@ -254,7 +188,7 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
           />
 
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!inputQuery.trim()}
             className="absolute right-2 w-7 h-7 rounded-lg bg-[#00b2ea] hover:bg-[#00c5ff] disabled:opacity-40 disabled:hover:bg-[#00b2ea] text-black flex items-center justify-center transition-all cursor-pointer disabled:cursor-not-allowed"
           >
