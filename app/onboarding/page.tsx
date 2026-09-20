@@ -189,7 +189,7 @@ export default function OnboardingPage() {
 
         const formData = new FormData();
         formData.append("file", blob, "my-test-call.webm");
-        formData.append("title", "My 2-Minute Test Call");
+        formData.append("title", "My Test Call");
         formData.append("platform", selectedPlatform);
         formData.append("role", selectedRole);
 
@@ -252,7 +252,7 @@ export default function OnboardingPage() {
           </span>
           <span>→</span>
           <span className={step >= 3 ? "text-[#00b2ea] font-semibold" : ""}>
-            3. Record 2-Min Call
+            3. Record Test Call
           </span>
         </div>
       </header>
@@ -350,7 +350,7 @@ export default function OnboardingPage() {
               </div>
               <h2 className="text-xl font-bold text-white mb-1">Setup your test call</h2>
               <p className="text-xs text-[#9a9ba1]">
-                Choose how you want to record your 2-minute test meeting.
+                Choose how you want to record your test meeting.
               </p>
             </div>
 
@@ -392,7 +392,7 @@ export default function OnboardingPage() {
                   {captureMode === "simulated" && <Check className="w-4 h-4 text-[#00b2ea]" />}
                 </div>
                 <p className="text-[11px] text-[#9a9ba1] mt-1">
-                  Instant 2-minute test meeting with Emmily Bowman and Fathom Notetaker without camera access.
+                  Instant test meeting with Emmily Bowman and Fathom Notetaker without camera access.
                 </p>
               </div>
             </div>
@@ -408,17 +408,18 @@ export default function OnboardingPage() {
                   "Sales & CS",
                   "Founders & Execs",
                   "Recruiting & HR",
-                ].map((role) => (
+                ].map((r) => (
                   <button
-                    key={role}
-                    onClick={() => setSelectedRole(role)}
-                    className={`h-8 px-2.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer truncate ${
-                      selectedRole === role
+                    key={r}
+                    type="button"
+                    onClick={() => setSelectedRole(r)}
+                    className={`h-9 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                      selectedRole === r
                         ? "bg-[#00b2ea]/15 border-[#00b2ea] text-[#00b2ea]"
-                        : "bg-[#181a24] border-[#2a2d3b] text-[#9a9ba1] hover:text-white"
+                        : "bg-[#181a24] border-[#2c303f] text-[#9a9ba1] hover:text-white"
                     }`}
                   >
-                    {role}
+                    {r}
                   </button>
                 ))}
               </div>
@@ -454,7 +455,7 @@ export default function OnboardingPage() {
               onClick={() => setStep(3)}
               className="w-full h-11 bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-[#00b2ea]/20"
             >
-              <span>Launch 2-Min Call</span>
+              <span>Launch Test Call</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -468,7 +469,7 @@ export default function OnboardingPage() {
               <div className="flex items-center gap-2">
                 <Video className="w-4 h-4 text-[#00b2ea]" />
                 <span className="font-semibold text-white">
-                  {selectedPlatform.toUpperCase()}: 2-Minute Call with Yourself
+                  {selectedPlatform.toUpperCase()}: Test Call with Yourself
                 </span>
                 {captureMode === "webrtc" && (
                   <span className="text-[10px] font-bold bg-[#3dbb6b]/20 text-[#3dbb6b] px-2 py-0.5 rounded">

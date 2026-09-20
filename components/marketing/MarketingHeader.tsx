@@ -414,11 +414,11 @@ export function MarketingHeader({ currentPath = "/" }: MarketingHeaderProps) {
                       </div>
                       <div>
                         <div className="font-semibold text-white group-hover:text-[#3dbb6b] transition-colors flex items-center gap-1">
-                          2-Minute Test Call
+                          Interactive Meeting Playback
                           <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <p className="text-[11px] text-[#8e909a] mt-0.5 leading-snug">
-                          Live WebRTC recording test call with real audio/video sync & summary.
+                          Live meeting playback with real audio/video sync & summary.
                         </p>
                       </div>
                     </Link>
