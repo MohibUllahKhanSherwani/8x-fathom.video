@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"my" | "team" | "playlists" | "alerts" | "deals">("my");
+  const [isCallsDropdownOpen, setIsCallsDropdownOpen] = useState(false);
   const [isAskFathomOpen, setIsAskFathomOpen] = useState(true);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,12 +75,61 @@ export default function HomePage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-y-auto">
-          {/* Subheader: My Calls, Team Calls, Playlists, Alerts, Deals */}
+          {/* Subheader: Calls Dropdown (My Calls ⌵ / Team Calls), Playlists, Alerts, Deals */}
           <div className="h-11 border-b border-[#26282d] px-6 flex items-center justify-between select-none bg-[#111214] sticky top-0 z-10">
             <div className="flex items-center gap-7 h-full">
+              {/* Calls Dropdown: My Calls ⌵ / Team Calls */}
+              <div className="relative h-full flex items-center">
+                <button
+                  onClick={() => setIsCallsDropdownOpen(!isCallsDropdownOpen)}
+                  className={`h-full text-xs font-semibold flex items-center gap-1.5 transition-colors relative cursor-pointer ${
+                    activeTab === "my" || activeTab === "team"
+                      ? "text-[#00b2ea]"
+                      : "text-[#d1d5db] hover:text-white"
+                  }`}
+                >
+                  <span>{activeTab === "team" ? "Team Calls" : "My Calls"}</span>
+                  <span className={`text-[10px] transition-transform duration-150 ${isCallsDropdownOpen ? "rotate-180" : ""}`}>
+                    ▼
+                  </span>
+                  {(activeTab === "my" || activeTab === "team") && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
+                  )}
+                </button>
+
+                {/* Dropdown Menu */}
+                {isCallsDropdownOpen && (
+                  <div className="absolute top-11 left-0 w-44 rounded-xl bg-[#1a1c22] border border-[#2e313b] shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                    <button
+                      onClick={() => {
+                        setActiveTab("my");
+                        setIsCallsDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-[#252833] transition-colors cursor-pointer ${
+                        activeTab === "my" ? "text-[#00b2ea] font-semibold" : "text-[#d1d5db]"
+                      }`}
+                    >
+                      <span>My Calls</span>
+                      {activeTab === "my" && <span className="text-xs">✓</span>}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab("team");
+                        setIsCallsDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-[#252833] transition-colors cursor-pointer ${
+                        activeTab === "team" ? "text-[#00b2ea] font-semibold" : "text-[#d1d5db]"
+                      }`}
+                    >
+                      <span>Team Calls</span>
+                      {activeTab === "team" && <span className="text-xs">✓</span>}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Other Subheader Tabs */}
               {[
-                { id: "my", label: "My Calls" },
-                { id: "team", label: "Team Calls" },
                 { id: "playlists", label: "Playlists" },
                 { id: "alerts", label: "Alerts" },
                 { id: "deals", label: "Deals" },
@@ -88,7 +138,10 @@ export default function HomePage() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                    onClick={() => {
+                      setActiveTab(tab.id as typeof activeTab);
+                      setIsCallsDropdownOpen(false);
+                    }}
                     className={`h-full text-xs font-semibold transition-colors relative cursor-pointer ${
                       isActive
                         ? "text-[#00b2ea]"
