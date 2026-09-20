@@ -59,10 +59,10 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Server pipeline (`POST /api/upload`) with audio processing & Gemini pipeline
   - [x] Step-by-step processing status progress bar (`UploadModal`) and call redirection
 
-- [ ] **Phase 8: Polish, QA & Walkthrough (20 to 22h)**
-
-  - [ ] Run QA checklist against live deployment
-  - [ ] Complete `README.md` and verify `DECISIONS.md`
-  - [ ] Verify `.agent-logs/` is complete and up to date
+- [x] **Phase 8: Polish, QA & Walkthrough (20 to 22h)**
+  - [x] Run QA checklist against live deployment & build
+  - [x] Complete `README.md` and verify `DECISIONS.md`
+  - [x] Verify `.agent-logs/` is complete and up to date
   - [ ] Record 5-min walkthrough video (camera on, voiceover)
   - [ ] Final submission verification
+
