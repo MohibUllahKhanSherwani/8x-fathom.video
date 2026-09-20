@@ -42,3 +42,8 @@ pics_of_flow/
 # IMPORTANT: Do NOT ignore .agent-logs/ (required by 8x)
 !.agent-logs/
 .agent-logs/*.log
+
+# Demo scripts & recording notes (local only)
+DEMO_SCRIPT.md
+demo_notes.md
+scratch/
