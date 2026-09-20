@@ -21,14 +21,23 @@ def format_iso_utc(dt):
         utc_dt = dt.replace(tzinfo=timezone.utc)
     return utc_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
+def sanitize_secrets(text):
+    if not text:
+        return ""
+    # Redact Google/Gemini and GCP API keys
+    text = re.sub(r'AQ\.Ab[a-zA-Z0-9_\-]+', '[REDACTED_GEMINI_API_KEY]', text)
+    text = re.sub(r'AIzaSy[a-zA-Z0-9_\-]+', '[REDACTED_GOOGLE_API_KEY]', text)
+    return text
+
 def extract_prompt_text(content):
     if not content:
         return ""
     # Check for <USER_REQUEST> tags
     req_match = re.search(r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", content, re.DOTALL)
     if req_match:
-        return req_match.group(1).strip()
-    return content.strip()
+        return sanitize_secrets(req_match.group(1).strip())
+    return sanitize_secrets(content.strip())
+
 
 def process_transcript(conversation_id, transcript_path=None, model_name=None, repo_root=None):
     if repo_root is None:
@@ -162,9 +171,10 @@ model: {resolved_model}
         final_resp_step = resps[-1] if resps else None
         if final_resp_step:
             r_time = format_iso_utc(parse_iso_datetime(final_resp_step.get("created_at")))
-            resp_text = (final_resp_step.get("content", "") or "").strip()
+            resp_text = sanitize_secrets((final_resp_step.get("content", "") or "").strip())
             if not resp_text:
                 resp_text = "[Agent completed turn with tool execution]"
+
             resp_block = f"""[LOG_ENTRY type=RESPONSE num={turn_num} session={short_session_id}]
 timestamp: {r_time}
 model: {resolved_model}
