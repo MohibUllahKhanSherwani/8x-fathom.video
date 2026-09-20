@@ -12,14 +12,17 @@ interface AskFathomPanelProps {
 export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<"my" | "team" | "all">("my");
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([
-    {
-      role: "user",
-      text: "Summarize my meetings from last week",
-    },
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<
+    Array<{
+      role: "user" | "assistant";
+      text: string;
+      citations?: Array<{ label: string; ms: number; meetingId: string; meetingTitle: string }>;
+    }>
+  >([
     {
       role: "assistant",
-      text: "I couldn't find any calls that seem relevant to your question. Try rephrasing your question or adjusting your date filters.",
+      text: "Hi! Ask me anything across your meetings, like 'What are my deadlines?', 'Who owns pricing?', or 'Summarize my meetings from today'.",
     },
   ]);
 
@@ -37,19 +40,43 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
     );
   }
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const text = textToSend || query;
-    if (!text.trim()) return;
+    if (!text.trim() || isLoading) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", text },
-      {
-        role: "assistant",
-        text: "I couldn't find any calls that seem relevant to your question. Try rephrasing your question or adjusting your date filters.",
-      },
-    ]);
+    setMessages((prev) => [...prev, { role: "user", text }]);
     setQuery("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: text, scope }),
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch answer");
+
+      const data = await res.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: data.text,
+          citations: data.citations,
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: "Sorry, I had trouble answering that question. Please try again.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -94,24 +121,57 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
                 <div className="w-6 h-6 rounded-full bg-[#111214] border border-[#2f3238] flex items-center justify-center shrink-0 mt-0.5">
                   <FathomSwoosh className="w-3.5 h-3.5" />
                 </div>
-                <div className="text-[#d1d5db] italic leading-relaxed py-1">
-                  {msg.text}
+                <div className="space-y-2 py-1">
+                  <div className="text-[#d1d5db] whitespace-pre-line leading-relaxed">
+                    {msg.text}
+                  </div>
+
+                  {/* Citation chips */}
+                  {msg.citations && msg.citations.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {msg.citations.map((c, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={`/calls/${c.meetingId}?t=${c.ms}`}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#00b2ea]/15 hover:bg-[#00b2ea]/25 border border-[#00b2ea]/40 text-[#00b2ea] font-mono text-[10px] font-semibold transition-colors"
+                        >
+                          <span>{c.meetingTitle || "Call"}</span>
+                          <span>[{c.label}]</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
         ))}
 
+        {isLoading && (
+          <div className="flex items-center gap-2 text-xs text-[#9a9ba1]">
+            <Sparkles className="w-3.5 h-3.5 text-[#00b2ea] animate-spin" />
+            <span>Searching all meetings...</span>
+          </div>
+        )}
+
         {/* Start New Session Pill */}
         <div className="flex justify-center pt-2">
           <button
-            onClick={() => setMessages([])}
+            onClick={() =>
+              setMessages([
+                {
+                  role: "assistant",
+                  text: "Session reset. Ask me anything across your meetings!",
+                },
+              ])
+            }
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e2024] hover:bg-[#25282e] border border-[#2f3238] text-[11px] text-[#9a9ba1] hover:text-white transition-all cursor-pointer"
           >
             <RefreshCw className="w-3 h-3" />
             <span>Start a new session</span>
           </button>
         </div>
+
 
         {/* Suggested Prompts */}
         <div className="space-y-1.5 pt-4">

@@ -32,16 +32,17 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Transcript search with match filtering
   - [x] Highlights (scrub bar markers, transcript borders, right column list)
 
-- [ ] **Phase 3: Search & Ask Fathom (9 to 12h)**
-  - [ ] Global search in top bar (Postgres FTS across titles, participants, summaries, segments)
-  - [ ] Ask Fathom (per-call tab): streaming SSE, citation chips, cached suggestion chips
-  - [ ] Ask Fathom (account-level home panel): date phrase parsing (`chrono-node`), multi-call context
+- [x] **Phase 3: Search & Ask Fathom (9 to 12h)**
+  - [x] Global search in top bar (Postgres FTS & client search across titles, participants, summaries, segments)
+  - [x] Ask Fathom (per-call tab): streaming SSE, citation chips, cached suggestion chips, planted facts
+  - [x] Ask Fathom (account-level home panel): date phrase parsing (`chrono-node`), multi-call context, links to `/calls/[id]?t=[ms]`
 
 - [ ] **Phase 4: Sharing & Team Calls (12 to 14h)**
-  - [ ] Share popover & configuration (summary, transcript, recording toggles)
-  - [ ] Public read-only share page (`/share/[token]`)
+  - [x] Share popover & configuration (summary, transcript, recording toggles)
+  - [x] Public read-only share page (`/share/[token]`)
   - [ ] Clips creation & public clip player (`/clip/[token]`)
   - [ ] Team Calls tab (`visibility = team`)
+
 
 - [ ] **Phase 5: Landing Page (14 to 16h - Timeboxed 90m)**
   - [ ] Match `fathom.ai/overview` structure, dark theme, typography, hero, cards, testimonials

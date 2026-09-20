@@ -74,8 +74,8 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
     ]);
   };
 
-  const handleSend = () => {
-    if (!inputQuery.trim()) return;
+  const handleSend = async () => {
+    if (!inputQuery.trim() || isTyping) return;
 
     const userText = inputQuery.trim();
     setInputQuery("");
@@ -84,8 +84,26 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
     // Add user message
     setMessages((prev) => [...prev, { role: "user", text: userText }]);
 
-    setTimeout(() => {
-      // Check for known planted facts
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userText, meetingId: "829997322" }),
+      });
+
+      if (!res.ok) throw new Error("API error");
+
+      const data = await res.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: data.text,
+          citations: data.citations,
+        },
+      ]);
+    } catch {
+      // Fallback to local planted facts
       let reply = "";
       let citations: Array<{ label: string; ms: number }> = [];
 
@@ -119,9 +137,11 @@ export function AskFathomView({ onSeek }: AskFathomViewProps) {
         ...prev,
         { role: "assistant", text: reply, citations },
       ]);
+    } finally {
       setIsTyping(false);
-    }, 400);
+    }
   };
+
 
   return (
     <div className="flex flex-col h-full bg-black text-white relative select-none">

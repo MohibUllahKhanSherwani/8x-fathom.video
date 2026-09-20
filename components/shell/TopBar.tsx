@@ -1,10 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Gift, Settings, HelpCircle, Star, LogOut, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  Gift,
+  Settings,
+  HelpCircle,
+  Star,
+  LogOut,
+  Clock,
+  MessageSquare,
+  ChevronRight,
+  User,
+} from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { DEMO_USER } from "@/lib/constants";
+import { searchMeetings, GlobalSearchResults } from "@/lib/search";
 
 interface TopBarProps {
   isPublic?: boolean;
@@ -16,12 +29,125 @@ interface TopBarProps {
 export function TopBar({
   isPublic = false,
   onSearchFocus,
-  searchQuery = "",
-  onSearchChange,
+  searchQuery: externalSearchQuery,
+  onSearchChange: externalOnSearchChange,
 }: TopBarProps) {
+  const router = useRouter();
+  const [internalQuery, setInternalQuery] = useState("");
+  const query = externalSearchQuery !== undefined ? externalSearchQuery : internalQuery;
+  const [searchResults, setSearchResults] = useState<GlobalSearchResults | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showReferModal, setShowReferModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const handleQueryChange = (val: string) => {
+    if (externalOnSearchChange) {
+      externalOnSearchChange(val);
+    } else {
+      setInternalQuery(val);
+    }
+
+    if (val.trim()) {
+      const results = searchMeetings(val);
+      setSearchResults(results);
+      setIsOpen(true);
+      setSelectedIndex(0);
+    } else {
+      setSearchResults(null);
+      setIsOpen(false);
+    }
+  };
+
+  // Keyboard shortcut: '/' focuses search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Flattened items for keyboard navigation
+  const allItems = searchResults
+    ? [
+        ...searchResults.meetings.map((m) => ({
+          type: "meeting" as const,
+          id: m.id,
+          title: m.title,
+          url: `/calls/${m.id}`,
+        })),
+        ...searchResults.transcripts.map((t) => ({
+          type: "transcript" as const,
+          id: `${t.meetingId}-${t.start_ms}`,
+          title: t.meetingTitle,
+          url: `/calls/${t.meetingId}?t=${t.start_ms}`,
+        })),
+      ]
+    : [];
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen || allItems.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % allItems.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + allItems.length) % allItems.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const selected = allItems[selectedIndex];
+      if (selected) {
+        setIsOpen(false);
+        router.push(selected.url);
+      }
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  const highlightMatch = (text: string, q: string) => {
+    if (!q.trim()) return text;
+    const parts = text.split(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === q.toLowerCase() ? (
+        <mark key={i} className="bg-[#00b2ea]/30 text-white font-semibold rounded-xs px-0.5">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
 
   if (isPublic) {
     return (
@@ -47,25 +173,128 @@ export function TopBar({
 
   return (
     <header className="h-14 border-b border-[#26282d] bg-[#111214] px-5 flex items-center justify-between select-none relative z-30">
-      {/* Left: Logo + Search */}
+      {/* Left: Logo + Global Search */}
       <div className="flex items-center gap-6 flex-1 max-w-xl">
         <Logo href="/home" />
 
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-[#9a9ba1] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
+            ref={inputRef}
             type="text"
-            placeholder="Search Call Recordings..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            onFocus={onSearchFocus}
-            className="w-full h-9 pl-9 pr-8 bg-[#1e2024] hover:bg-[#25282e] focus:bg-[#25282e] border border-[#2f3238] focus:border-[#00b2ea] rounded-full text-xs text-white placeholder-[#9a9ba1] outline-none transition-all"
+            placeholder="Search Call Recordings... (press /)"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onFocus={() => {
+              onSearchFocus?.();
+              if (query.trim()) setIsOpen(true);
+            }}
+            onKeyDown={handleKeyDown}
+            className="w-full h-9 pl-9 pr-8 bg-[#1e2024] hover:bg-[#25282e] focus:bg-[#25282e] border border-[#2f3238] focus:border-[#00b2ea] rounded-full text-xs text-white placeholder-[#9a9ba1] outline-none transition-all shadow-inner"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#9a9ba1] bg-[#2a2c32] px-1.5 py-0.5 rounded border border-[#3a3d45]">
             /
           </span>
+
+          {/* Search Dropdown */}
+          {isOpen && searchResults && (
+            <div
+              ref={dropdownRef}
+              className="absolute left-0 right-0 top-11 bg-[#161719] border border-[#2f3238] rounded-xl shadow-2xl overflow-hidden z-50 text-xs max-h-[480px] overflow-y-auto"
+            >
+              {searchResults.totalMatches === 0 ? (
+                <div className="p-4 text-center text-[#9a9ba1]">
+                  No results found for &ldquo;{query}&rdquo;
+                </div>
+              ) : (
+                <div className="py-2">
+                  {/* MEETINGS GROUP */}
+                  {searchResults.meetings.length > 0 && (
+                    <div>
+                      <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-[#9a9ba1] tracking-wider bg-[#111214]">
+                        Meetings ({searchResults.meetings.length})
+                      </div>
+                      {searchResults.meetings.map((m, idx) => {
+                        const isSelected = selectedIndex === idx;
+                        return (
+                          <Link
+                            key={m.id}
+                            href={`/calls/${m.id}`}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-start gap-3 px-3 py-2.5 transition-colors ${
+                              isSelected ? "bg-[#25282e]" : "hover:bg-[#1e2024]"
+                            }`}
+                          >
+                            <div className="w-7 h-7 rounded-lg bg-[#1e2024] border border-[#2f3238] flex items-center justify-center shrink-0 mt-0.5 text-[#00b2ea]">
+                              <Clock className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-white truncate">
+                                {highlightMatch(m.title, query)}
+                              </p>
+                              <p className="text-[11px] text-[#9a9ba1] truncate mt-0.5">
+                                {m.snippet ? (
+                                  highlightMatch(m.snippet, query)
+                                ) : (
+                                  `${Math.round(m.duration_sec / 60)} mins • ${m.participantCount} participants`
+                                )}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[#9a9ba1] shrink-0 self-center" />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* TRANSCRIPT MOMENTS GROUP */}
+                  {searchResults.transcripts.length > 0 && (
+                    <div className="mt-2 border-t border-[#26282d] pt-2">
+                      <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-[#9a9ba1] tracking-wider bg-[#111214]">
+                        Transcript Moments ({searchResults.transcripts.length})
+                      </div>
+                      {searchResults.transcripts.map((t, tIdx) => {
+                        const itemIndex = searchResults.meetings.length + tIdx;
+                        const isSelected = selectedIndex === itemIndex;
+                        return (
+                          <Link
+                            key={`${t.meetingId}-${t.start_ms}`}
+                            href={`/calls/${t.meetingId}?t=${t.start_ms}`}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-start gap-3 px-3 py-2.5 transition-colors ${
+                              isSelected ? "bg-[#25282e]" : "hover:bg-[#1e2024]"
+                            }`}
+                          >
+                            <div className="w-7 h-7 rounded-lg bg-[#1e2024] border border-[#2f3238] flex items-center justify-center shrink-0 mt-0.5 text-[#e8b923]">
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-white">{t.speaker}</span>
+                                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#00b2ea]/15 text-[#00b2ea] border border-[#00b2ea]/30">
+                                  {t.timestampLabel}
+                                </span>
+                                <span className="text-[11px] text-[#9a9ba1] truncate">
+                                  in {t.meetingTitle}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-[#d1d5db] line-clamp-2 mt-1 leading-relaxed">
+                                &ldquo;{highlightMatch(t.text, query)}&rdquo;
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[#9a9ba1] shrink-0 self-center" />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
 
       {/* Right: Actions & User */}
       <div className="flex items-center gap-5 text-xs text-[#9a9ba1]">

@@ -16,18 +16,22 @@ import { Share2, MoreVertical, Download, Trash2, ArrowLeft } from "lucide-react"
 
 interface CallPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ t?: string; tab?: string }>;
 }
 
-export default function CallPage({ params }: CallPageProps) {
+export default function CallPage({ params, searchParams }: CallPageProps) {
   const resolvedParams = use(params);
+  const resolvedSearchParams = searchParams ? use(searchParams) : undefined;
   const meetingId = resolvedParams.id;
+  const initialTimestamp = resolvedSearchParams?.t ? parseInt(resolvedSearchParams.t, 10) : 0;
+  const initialTab = resolvedSearchParams?.tab === "transcript" || resolvedSearchParams?.t ? "transcript" : "summary";
 
   // Find meeting
   const initialMeeting = SEED_MEETINGS.find((m) => m.id === meetingId) || SEED_MEETINGS[0];
 
-  const [activeTab, setActiveTab] = useState<"summary" | "transcript" | "ask">("summary");
+  const [activeTab, setActiveTab] = useState<"summary" | "transcript" | "ask">(initialTab);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTimeMs, setCurrentTimeMs] = useState(0);
+  const [currentTimeMs, setCurrentTimeMs] = useState(initialTimestamp);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [showKebabMenu, setShowKebabMenu] = useState(false);
@@ -41,6 +45,14 @@ export default function CallPage({ params }: CallPageProps) {
 
   const durationMs = initialMeeting.duration_sec * 1000;
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Seek to initial timestamp on mount if specified
+  useEffect(() => {
+    if (initialTimestamp > 0 && audioRef.current) {
+      audioRef.current.currentTime = initialTimestamp / 1000;
+    }
+  }, [initialTimestamp]);
+
 
   // Find active speaker based on current time
   const activeSpeakerName = (() => {
