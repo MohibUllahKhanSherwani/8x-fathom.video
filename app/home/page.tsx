@@ -7,11 +7,10 @@ import { TopBar } from "@/components/shell/TopBar";
 import { AskFathomPanel } from "@/components/home/AskFathomPanel";
 import { Meeting } from "@/lib/seed-meetings";
 import { UploadModal } from "@/components/home/UploadModal";
-import { Loader2, Calendar, Video, ArrowRight } from "lucide-react";
+import { Loader2, MoreHorizontal } from "lucide-react";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"my" | "team" | "playlists" | "alerts" | "deals">("my");
-  const [isCallsDropdownOpen, setIsCallsDropdownOpen] = useState(false);
   const [isAskFathomOpen, setIsAskFathomOpen] = useState(true);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,86 +74,88 @@ export default function HomePage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-y-auto">
-          {/* Subheader: Calls Dropdown (My Calls ⌵ / Team Calls), Playlists, Alerts, Deals */}
+          {/* Subheader: My Calls, Team Calls, Playlists, Alerts, Deals */}
           <div className="h-11 border-b border-[#26282d] px-6 flex items-center justify-between select-none bg-[#111214] sticky top-0 z-10">
             <div className="flex items-center gap-7 h-full">
-              {/* Calls Dropdown: My Calls ⌵ / Team Calls */}
-              <div className="relative h-full flex items-center">
+              {/* My Calls with Tooltip */}
+              <div className="relative group h-full flex items-center">
                 <button
-                  onClick={() => setIsCallsDropdownOpen(!isCallsDropdownOpen)}
-                  className={`h-full text-xs font-semibold flex items-center gap-1.5 transition-colors relative cursor-pointer ${
-                    activeTab === "my" || activeTab === "team"
+                  onClick={() => setActiveTab("my")}
+                  className={`h-full text-xs font-semibold transition-colors relative cursor-pointer flex items-center ${
+                    activeTab === "my"
                       ? "text-[#00b2ea]"
                       : "text-[#d1d5db] hover:text-white"
                   }`}
                 >
-                  <span>{activeTab === "team" ? "Team Calls" : "My Calls"}</span>
-                  <span className={`text-[10px] transition-transform duration-150 ${isCallsDropdownOpen ? "rotate-180" : ""}`}>
-                    ▼
-                  </span>
-                  {(activeTab === "my" || activeTab === "team") && (
+                  <span>My Calls</span>
+                  {activeTab === "my" && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
                   )}
                 </button>
-
-                {/* Dropdown Menu */}
-                {isCallsDropdownOpen && (
-                  <div className="absolute top-11 left-0 w-44 rounded-xl bg-[#1a1c22] border border-[#2e313b] shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                    <button
-                      onClick={() => {
-                        setActiveTab("my");
-                        setIsCallsDropdownOpen(false);
-                      }}
-                      className={`w-full px-4 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-[#252833] transition-colors cursor-pointer ${
-                        activeTab === "my" ? "text-[#00b2ea] font-semibold" : "text-[#d1d5db]"
-                      }`}
-                    >
-                      <span>My Calls</span>
-                      {activeTab === "my" && <span className="text-xs">✓</span>}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActiveTab("team");
-                        setIsCallsDropdownOpen(false);
-                      }}
-                      className={`w-full px-4 py-2 text-left text-xs font-medium flex items-center justify-between hover:bg-[#252833] transition-colors cursor-pointer ${
-                        activeTab === "team" ? "text-[#00b2ea] font-semibold" : "text-[#d1d5db]"
-                      }`}
-                    >
-                      <span>Team Calls</span>
-                      {activeTab === "team" && <span className="text-xs">✓</span>}
-                    </button>
-                  </div>
-                )}
+                <div className="absolute top-10 left-0 hidden group-hover:block bg-[#1f2228] text-white text-[10px] px-2 py-0.5 rounded shadow-lg border border-[#323640] whitespace-nowrap z-50 pointer-events-none">
+                  Click to return home
+                </div>
               </div>
 
-              {/* Other Subheader Tabs */}
-              {[
-                { id: "playlists", label: "Playlists" },
-                { id: "alerts", label: "Alerts" },
-                { id: "deals", label: "Deals" },
-              ].map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id as typeof activeTab);
-                      setIsCallsDropdownOpen(false);
-                    }}
-                    className={`h-full text-xs font-semibold transition-colors relative cursor-pointer ${
-                      isActive
-                        ? "text-[#00b2ea]"
-                        : "text-[#d1d5db] hover:text-white"
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                    {isActive && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
-                    )}
-                  </button>
-                );
-              })}
+              {/* Team Calls */}
+              <button
+                onClick={() => setActiveTab("team")}
+                className={`h-full text-xs font-semibold transition-colors relative cursor-pointer flex items-center ${
+                  activeTab === "team"
+                    ? "text-[#00b2ea]"
+                    : "text-[#d1d5db] hover:text-white"
+                }`}
+              >
+                <span>Team Calls</span>
+                {activeTab === "team" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
+                )}
+              </button>
+
+              {/* Playlists */}
+              <button
+                onClick={() => setActiveTab("playlists")}
+                className={`h-full text-xs font-semibold transition-colors relative cursor-pointer flex items-center ${
+                  activeTab === "playlists"
+                    ? "text-[#00b2ea]"
+                    : "text-[#d1d5db] hover:text-white"
+                }`}
+              >
+                <span>Playlists</span>
+                {activeTab === "playlists" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
+                )}
+              </button>
+
+              {/* Alerts */}
+              <button
+                onClick={() => setActiveTab("alerts")}
+                className={`h-full text-xs font-semibold transition-colors relative cursor-pointer flex items-center ${
+                  activeTab === "alerts"
+                    ? "text-[#00b2ea]"
+                    : "text-[#d1d5db] hover:text-white"
+                }`}
+              >
+                <span>Alerts</span>
+                {activeTab === "alerts" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
+                )}
+              </button>
+
+              {/* Deals */}
+              <button
+                onClick={() => setActiveTab("deals")}
+                className={`h-full text-xs font-semibold transition-colors relative cursor-pointer flex items-center ${
+                  activeTab === "deals"
+                    ? "text-[#00b2ea]"
+                    : "text-[#d1d5db] hover:text-white"
+                }`}
+              >
+                <span>Deals</span>
+                {activeTab === "deals" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00b2ea]" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -172,40 +173,9 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                {/* Calendar & 2-Min Test Call Action Banner */}
-                <div className="rounded-2xl bg-gradient-to-r from-[#14161f] via-[#181b26] to-[#12141c] border border-[#272b38] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-[#00b2ea]/15 border border-[#00b2ea]/30 flex items-center justify-center text-[#00b2ea] shrink-0">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-white flex items-center gap-2">
-                        <span>Connect Calendar &amp; Record a Meeting</span>
-                        <span className="text-[10px] font-semibold bg-[#3dbb6b]/20 text-[#3dbb6b] px-2 py-0.5 rounded-full">
-                          Ready
-                        </span>
-                      </h3>
-                      <p className="text-[11px] text-[#9a9ba1] mt-0.5">
-                        Get Fathom into a 2-minute test call with yourself on Zoom, Meet, or Teams, and see how summaries and action items work live.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
-                    <Link
-                      href="/onboarding"
-                      className="h-9 px-4 rounded-xl bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-[#00b2ea]/20 cursor-pointer"
-                    >
-                      <Video className="w-3.5 h-3.5" />
-                      <span>Start 2-Min Test Call</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-
                 {/* Section: Today */}
                 <div>
-                  <h2 className="text-sm font-bold text-white mb-4">Today</h2>
+                  <h2 className="text-sm font-bold text-white mb-3">Today</h2>
 
                   {todayMeetings.length === 0 ? (
                     <div className="py-12 text-center text-xs text-[#9a9ba1]">
@@ -223,7 +193,7 @@ export default function HomePage() {
                 {/* Section: Earlier Calls */}
                 {earlierMeetings.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-bold text-white mb-4">Earlier</h2>
+                    <h2 className="text-sm font-bold text-white mb-3">Earlier</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                       {earlierMeetings.map((meeting) => (
                         <MeetingCard key={meeting.id} meeting={meeting} />
@@ -256,44 +226,53 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   const durationMin = Math.round(meeting.duration_sec / 60);
 
   return (
-    <Link
-      href={`/calls/${meeting.id}`}
-      className="group block focus:outline-none"
-    >
-      {/* 16:9 Thumbnail Container */}
-      <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-[#1e2024] border border-[#26282d] group-hover:border-[#3a3d45] transition-all">
-        {meeting.thumbnail_url ? (
-          <Image
-            src={meeting.thumbnail_url}
-            alt={meeting.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        ) : (
-          <div className="w-full h-full bg-[#1e2024] flex items-center justify-center text-[#9a9ba1] text-xs">
-            <span>Video Recording</span>
+    <div className="group block focus:outline-none">
+      <Link href={`/calls/${meeting.id}`} className="block">
+        {/* 16:9 Thumbnail Container */}
+        <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-[#1e2024] border border-[#26282d] group-hover:border-[#3a3d45] transition-all">
+          {meeting.thumbnail_url ? (
+            <Image
+              src={meeting.thumbnail_url}
+              alt={meeting.title}
+              fill
+              className="object-cover group-hover:scale-102 transition-transform duration-200"
+            />
+          ) : (
+            <div className="w-full h-full bg-[#1e2024] flex items-center justify-center text-[#9a9ba1] text-xs">
+              <span>Video Recording</span>
+            </div>
+          )}
+
+          {/* Bottom-left Badge: exact text Click "Start Recording" in Fathom for test call */}
+          <div className="absolute left-2 bottom-2 px-2 py-0.5 rounded bg-black/85 backdrop-blur-xs text-[10px] text-white font-medium shadow-sm max-w-[80%] truncate">
+            {meeting.id === "829997322" || meeting.title.toLowerCase().includes("test call")
+              ? 'Click "Start Recording" in Fathom'
+              : meeting.owner_name || "Team Call"}
           </div>
-        )}
 
-        {/* Bottom-left Badge */}
-        <div className="absolute left-2 bottom-2 px-2 py-0.5 rounded bg-black/80 backdrop-blur-xs text-[10px] text-white font-medium shadow-sm">
-          {meeting.id === "829997322"
-            ? "Quick Test Call"
-            : meeting.owner_name || "Team Call"}
+          {/* Bottom-right Duration Badge */}
+          <div className="absolute right-2 bottom-2 px-1.5 py-0.5 rounded bg-black/85 backdrop-blur-xs text-[10px] text-white font-medium shadow-sm">
+            {durationMin} mins
+          </div>
         </div>
+      </Link>
 
-        {/* Bottom-right Duration Badge */}
-        <div className="absolute right-2 bottom-2 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs text-[10px] text-white font-medium shadow-sm">
-          {durationMin} mins
-        </div>
-      </div>
-
-      {/* Title Below Thumbnail */}
-      <div className="mt-2">
-        <h3 className="text-xs font-semibold text-white group-hover:text-[#00b2ea] transition-colors truncate">
+      {/* Title & Actions Below Thumbnail */}
+      <div className="mt-2 flex items-center justify-between">
+        <Link
+          href={`/calls/${meeting.id}`}
+          className="text-xs font-semibold text-white group-hover:text-[#00b2ea] transition-colors truncate flex-1"
+        >
           {meeting.title}
-        </h3>
+        </Link>
+        <button
+          type="button"
+          className="text-[#6b7280] hover:text-white p-1 rounded transition-colors cursor-pointer shrink-0 ml-1"
+          title="More options"
+        >
+          <MoreHorizontal className="w-3.5 h-3.5" />
+        </button>
       </div>
-    </Link>
+    </div>
   );
 }

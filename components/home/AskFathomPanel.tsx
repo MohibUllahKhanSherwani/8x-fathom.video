@@ -98,15 +98,18 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
       </div>
 
       {/* Gold Announcement Banner */}
-      <div className="p-3 bg-[#242010] border-b border-[#e8b923]/30 text-[11px] text-[#e8b923] flex items-start gap-2 leading-relaxed">
-        <span className="text-sm">🎁</span>
-        <div className="flex-1">
-          <span className="font-semibold text-[#f59e0b]">Account-level Ask Fathom is here!</span>{" "}
-          <span className="text-[#d1a13b]">
-            We&apos;re gifting you unlimited use until Oct 1. Limits may apply after.
-          </span>{" "}
-          <span className="underline cursor-pointer font-medium text-[#f59e0b]">Learn More</span>
+      <div className="p-3 bg-[#242010] border-b border-[#e8b923]/30 text-[11px] text-[#e8b923] flex items-start justify-between gap-2 leading-relaxed">
+        <div className="flex items-start gap-2">
+          <span className="text-sm">🎁</span>
+          <div>
+            <span className="font-semibold text-[#f59e0b]">Account-level Ask Fathom is here!</span>{" "}
+            <span className="text-[#d1a13b]">
+              We&apos;re gifting you unlimited use until Oct 1. Limits may apply after.
+            </span>{" "}
+            <span className="underline cursor-pointer font-medium text-[#f59e0b]">Learn More</span>
+          </div>
         </div>
+        <span className="text-[#d1a13b] text-[9px] cursor-pointer hover:text-white shrink-0 mt-0.5">▲</span>
       </div>
 
       {/* Messages Scroll Area */}
@@ -163,18 +166,19 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
         {/* Suggested Prompts Stacked as in screenshot */}
         <div className="space-y-2 pt-2 flex flex-col items-end">
           {[
-            "Things I promised I'd do by this week",
-            "Next steps on projects?",
+            "Any looming deadlines?",
             "Summarize my meetings from last week",
+            "Things I promised I'd do by this week",
           ].map((prompt, i) => (
             <button
               key={i}
               onClick={() => handleSend(prompt)}
-              className="px-3 py-1.5 rounded-lg bg-[#161719] hover:bg-[#1e2024] border border-[#26282d] hover:border-[#3a3d45] text-xs text-[#d1d5db] hover:text-white transition-all cursor-pointer shadow-xs"
+              className="px-3.5 py-2 rounded-xl bg-[#1a1c22] hover:bg-[#252833] border border-[#2e313b] hover:border-[#3a3d45] text-xs text-[#d1d5db] hover:text-white transition-all cursor-pointer shadow-xs text-right"
             >
               {prompt}
             </button>
           ))}
+          <div className="text-[#6b7280] text-[10px] pr-2 pt-0.5">▼</div>
         </div>
       </div>
 
