@@ -7,7 +7,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { AskFathomPanel } from "@/components/home/AskFathomPanel";
 import { Meeting } from "@/lib/seed-meetings";
 import { UploadModal } from "@/components/home/UploadModal";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar, Video, ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"my" | "team" | "playlists" | "alerts" | "deals">("my");
@@ -172,6 +172,37 @@ export default function HomePage() {
               </div>
             ) : (
               <>
+                {/* Calendar & 2-Min Test Call Action Banner */}
+                <div className="rounded-2xl bg-gradient-to-r from-[#14161f] via-[#181b26] to-[#12141c] border border-[#272b38] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-[#00b2ea]/15 border border-[#00b2ea]/30 flex items-center justify-center text-[#00b2ea] shrink-0">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-white flex items-center gap-2">
+                        <span>Connect Calendar &amp; Record a Meeting</span>
+                        <span className="text-[10px] font-semibold bg-[#3dbb6b]/20 text-[#3dbb6b] px-2 py-0.5 rounded-full">
+                          Ready
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-[#9a9ba1] mt-0.5">
+                        Get Fathom into a 2-minute test call with yourself on Zoom, Meet, or Teams, and see how summaries and action items work live.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+                    <Link
+                      href="/onboarding"
+                      className="h-9 px-4 rounded-xl bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-[#00b2ea]/20 cursor-pointer"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Start 2-Min Test Call</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+
                 {/* Section: Today */}
                 <div>
                   <h2 className="text-sm font-bold text-white mb-4">Today</h2>
