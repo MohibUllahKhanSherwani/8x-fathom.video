@@ -45,11 +45,12 @@ Submission Target: 21 Sept 2026, 05:30 UTC
 
 
 
-- [ ] **Phase 5: Landing Page (14 to 16h - Timeboxed 90m)**
-  - [ ] Match `fathom.ai/overview` structure, dark theme, typography, hero, cards, testimonials
-  - [ ] Ensure all CTAs link to `/login` or `/demo`
+- [x] **Phase 5: Landing Page (14 to 16h - Timeboxed 90m)**
+  - [x] Match `fathom.ai/overview` structure, dark theme, typography, hero, cards, testimonials
+  - [x] Ensure all CTAs link to `/login` or `/demo`
 
 - [ ] **Phase 6: Settings, Onboarding & Simulated Capture (16 to 18h)**
+
   - [ ] Settings page with functional effects (default template, bot name, auto-actions)
   - [ ] Onboarding flow (Google consent -> use case -> Zoom connect -> test call prompt)
   - [ ] Simulated capture bot flow (host permission dialog, REC state, processing steps)
