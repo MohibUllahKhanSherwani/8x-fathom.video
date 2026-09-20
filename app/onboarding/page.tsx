@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo, FathomSwoosh } from "@/components/brand/Logo";
@@ -16,6 +16,10 @@ import {
   Loader2,
   Video,
   Radio,
+  Camera,
+  CameraOff,
+  Mic,
+  MicOff,
 } from "lucide-react";
 
 export default function OnboardingPage() {
@@ -27,9 +31,10 @@ export default function OnboardingPage() {
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
 
-  // Step 2: Role / Use Case
+  // Step 2: Role / Platform
   const [selectedRole, setSelectedRole] = useState<string>("Product & Engineering");
   const [selectedPlatform, setSelectedPlatform] = useState<"zoom" | "meet" | "teams">("zoom");
+  const [captureMode, setCaptureMode] = useState<"webrtc" | "simulated">("webrtc");
 
   // Step 3: Test Call State
   const [testCallState, setTestCallState] = useState<
@@ -41,6 +46,17 @@ export default function OnboardingPage() {
     Array<{ speaker: string; text: string; time: string }>
   >([]);
   const [processingStep, setProcessingStep] = useState(0);
+  const [createdMeetingId, setCreatedMeetingId] = useState<string>("829997322");
+
+  // Real Camera & Mic State
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // Calendar connect handler
   const handleConnectCalendar = (provider: "google" | "outlook") => {
@@ -54,28 +70,59 @@ export default function OnboardingPage() {
     }, 1000);
   };
 
-  // Test call ticker
+  // Setup real camera & microphone if in webrtc mode
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+
+    async function startMedia() {
+      if (step === 3 && captureMode === "webrtc") {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          mediaStreamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (err: unknown) {
+          console.warn("Camera/Mic access not granted or not available:", err);
+          setCameraError("Camera or microphone permission not granted. Falling back to simulated video.");
+          setCaptureMode("simulated");
+        }
+      }
+    }
+
+    startMedia();
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [step, captureMode]);
+
+  // Test call timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (step === 3 && testCallState === "recording") {
       interval = setInterval(() => {
         setTestSeconds((prev) => {
           const next = prev + 1;
-          // Trigger live transcripts at specific seconds
           if (next === 2) {
             setSimulatedTranscripts((t) => [
               ...t,
-              { speaker: "You (Host)", text: "Hey! Starting our quick 2-minute test call to see how Fathom works.", time: "00:02" },
+              { speaker: "You (Host)", text: "Starting our live test call with Fathom.", time: "00:02" },
             ]);
           } else if (next === 6) {
             setSimulatedTranscripts((t) => [
               ...t,
-              { speaker: "Emmily Bowman", text: "Welcome! Fathom has joined the meeting. You don't have to take a single note.", time: "00:06" },
+              { speaker: "Fathom AI", text: "Fathom Notetaker joined. Capturing real-time audio and speech diarization.", time: "00:06" },
             ]);
           } else if (next === 12) {
             setSimulatedTranscripts((t) => [
               ...t,
-              { speaker: "You (Host)", text: "That's awesome. Let's make sure the engineering review is scheduled for Thursday.", time: "00:12" },
+              { speaker: "You (Host)", text: "Let's make sure the engineering review is scheduled for Thursday.", time: "00:12" },
             ]);
           } else if (next === 18) {
             setSimulatedTranscripts((t) => [
@@ -90,28 +137,27 @@ export default function OnboardingPage() {
     return () => clearInterval(interval);
   }, [step, testCallState]);
 
-  // Process and redirect to call page
-  useEffect(() => {
-    if (testCallState === "processing") {
-      const t1 = setTimeout(() => setProcessingStep(1), 500);
-      const t2 = setTimeout(() => setProcessingStep(2), 1100);
-      const t3 = setTimeout(() => setProcessingStep(3), 1700);
-      const t4 = setTimeout(() => {
-        setTestCallState("completed");
-        router.push("/calls/829997322");
-      }, 2300);
-
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-        clearTimeout(t4);
-      };
-    }
-  }, [testCallState, router]);
-
+  // Start real recording
   const handleApproveRecording = () => {
     setTestCallState("recording");
+
+    if (captureMode === "webrtc" && mediaStreamRef.current) {
+      try {
+        recordedChunksRef.current = [];
+        const recorder = new MediaRecorder(mediaStreamRef.current, {
+          mimeType: MediaRecorder.isTypeSupported("video/webm") ? "video/webm" : "audio/webm",
+        });
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunksRef.current.push(e.data);
+          }
+        };
+        recorder.start(500); // chunk every 500ms
+        mediaRecorderRef.current = recorder;
+      } catch (e) {
+        console.warn("MediaRecorder start failed:", e);
+      }
+    }
   };
 
   const handleBookmarkHighlight = () => {
@@ -119,8 +165,76 @@ export default function OnboardingPage() {
     setHighlightsCreated((prev) => [...prev, `Highlight at ${timeStr}`]);
   };
 
-  const handleFinishTestCall = () => {
+  // End call & upload
+  const handleFinishTestCall = async () => {
     setTestCallState("processing");
+
+    // Stop camera/mic tracks
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+    }
+
+    // Stop recorder if active
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+
+    // Upload recording blob
+    setTimeout(async () => {
+      setProcessingStep(1);
+      try {
+        const blob = recordedChunksRef.current.length > 0
+          ? new Blob(recordedChunksRef.current, { type: "video/webm" })
+          : new Blob(["dummy audio"], { type: "audio/webm" });
+
+        const formData = new FormData();
+        formData.append("file", blob, "my-test-call.webm");
+        formData.append("title", "My 2-Minute Test Call");
+        formData.append("platform", selectedPlatform);
+        formData.append("role", selectedRole);
+
+        setProcessingStep(2);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        setProcessingStep(3);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.meetingId) {
+            setCreatedMeetingId(data.meetingId);
+          }
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+      } finally {
+        setTimeout(() => {
+          setTestCallState("completed");
+          router.push(`/calls/${createdMeetingId}`);
+        }, 800);
+      }
+    }, 600);
+  };
+
+  const toggleCamera = () => {
+    if (mediaStreamRef.current) {
+      const videoTrack = mediaStreamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setCameraEnabled(videoTrack.enabled);
+      }
+    }
+  };
+
+  const toggleMic = () => {
+    if (mediaStreamRef.current) {
+      const audioTrack = mediaStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setMicEnabled(audioTrack.enabled);
+      }
+    }
   };
 
   return (
@@ -138,7 +252,7 @@ export default function OnboardingPage() {
           </span>
           <span>→</span>
           <span className={step >= 3 ? "text-[#00b2ea] font-semibold" : ""}>
-            3. Record 2-Min Test Call
+            3. Record 2-Min Call
           </span>
         </div>
       </header>
@@ -227,51 +341,93 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* STEP 2: USE CASE & PLATFORM */}
+        {/* STEP 2: USE CASE & CAPTURE MODE */}
         {step === 2 && (
           <div className="max-w-md w-full bg-[#13151c] border border-[#262934] rounded-2xl p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-[#00b2ea]/15 border border-[#00b2ea]/30 flex items-center justify-center text-[#00b2ea] mx-auto mb-3">
                 <Users className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-1">Select your focus</h2>
+              <h2 className="text-xl font-bold text-white mb-1">Setup your test call</h2>
               <p className="text-xs text-[#9a9ba1]">
-                Fathom personalizes your AI summary templates and action item detection.
+                Choose how you want to record your 2-minute test meeting.
               </p>
             </div>
 
-            {/* Roles */}
+            {/* Mode Selection: Real Camera/Mic vs Simulated */}
             <div className="space-y-2">
-              {[
-                { title: "Product & Engineering", desc: "Roadmaps, sprint standups, technical design reviews" },
-                { title: "Sales & Account Management", desc: "Discovery calls, demos, CRM sync, deal reviews" },
-                { title: "Founders & Executives", desc: "Board meetings, 1-on-1s, strategic planning" },
-                { title: "Recruiting & HR", desc: "Candidate interviews, feedback scorecards, team syncs" },
-              ].map((role) => (
-                <div
-                  key={role.title}
-                  onClick={() => setSelectedRole(role.title)}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedRole === role.title
-                      ? "bg-[#1c1f2a] border-[#00b2ea] text-white shadow-md shadow-[#00b2ea]/10"
-                      : "bg-[#151720] hover:bg-[#1a1d28] border-[#262934] text-[#9a9ba1]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">{role.title}</span>
-                    {selectedRole === role.title && (
-                      <Check className="w-4 h-4 text-[#00b2ea]" />
-                    )}
-                  </div>
-                  <p className="text-[11px] text-[#9a9ba1] mt-0.5">{role.desc}</p>
+              <div
+                onClick={() => setCaptureMode("webrtc")}
+                className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  captureMode === "webrtc"
+                    ? "bg-[#1c1f2a] border-[#00b2ea] text-white shadow-md shadow-[#00b2ea]/10"
+                    : "bg-[#151720] hover:bg-[#1a1d28] border-[#262934] text-[#9a9ba1]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-[#00b2ea]" />
+                    <span>Real Camera &amp; Microphone (Recommended)</span>
+                  </span>
+                  {captureMode === "webrtc" && <Check className="w-4 h-4 text-[#00b2ea]" />}
                 </div>
-              ))}
+                <p className="text-[11px] text-[#9a9ba1] mt-1">
+                  Speak into your mic and let Gemini transcribe your real voice and generate a live summary.
+                </p>
+              </div>
+
+              <div
+                onClick={() => setCaptureMode("simulated")}
+                className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  captureMode === "simulated"
+                    ? "bg-[#1c1f2a] border-[#00b2ea] text-white shadow-md shadow-[#00b2ea]/10"
+                    : "bg-[#151720] hover:bg-[#1a1d28] border-[#262934] text-[#9a9ba1]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Video className="w-3.5 h-3.5 text-[#3dbb6b]" />
+                    <span>Simulated Meeting (Instant)</span>
+                  </span>
+                  {captureMode === "simulated" && <Check className="w-4 h-4 text-[#00b2ea]" />}
+                </div>
+                <p className="text-[11px] text-[#9a9ba1] mt-1">
+                  Instant 2-minute test meeting with Emmily Bowman and Fathom Notetaker without camera access.
+                </p>
+              </div>
+            </div>
+
+            {/* Role Selection */}
+            <div className="pt-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6e717b] mb-2">
+                Your Role
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  "Product & Engineering",
+                  "Sales & CS",
+                  "Founders & Execs",
+                  "Recruiting & HR",
+                ].map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => setSelectedRole(role)}
+                    className={`h-8 px-2.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer truncate ${
+                      selectedRole === role
+                        ? "bg-[#00b2ea]/15 border-[#00b2ea] text-[#00b2ea]"
+                        : "bg-[#181a24] border-[#2a2d3b] text-[#9a9ba1] hover:text-white"
+                    }`}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Video Platform Choice */}
             <div className="pt-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-[#6e717b] mb-2">
-                Preferred Meeting Platform
+                Meeting Platform
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -298,22 +454,27 @@ export default function OnboardingPage() {
               onClick={() => setStep(3)}
               className="w-full h-11 bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-[#00b2ea]/20"
             >
-              <span>Launch 2-Min Test Call</span>
+              <span>Launch 2-Min Call</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* STEP 3: REAL IN-MEETING NOTETAKER & RECORDING */}
+        {/* STEP 3: REAL CAMERA/MIC IN-MEETING NOTETAKER */}
         {step === 3 && (
-          <div className="max-w-2xl w-full bg-[#13151c] border border-[#262934] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            {/* Top Bar of Simulated Meeting */}
+          <div className="max-w-3xl w-full bg-[#13151c] border border-[#262934] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            {/* Top Bar */}
             <div className="h-11 bg-[#0f1015] border-b border-[#262934] px-4 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Video className="w-4 h-4 text-[#00b2ea]" />
                 <span className="font-semibold text-white">
-                  {selectedPlatform.toUpperCase()} Meeting: Test Call with Yourself
+                  {selectedPlatform.toUpperCase()}: 2-Minute Call with Yourself
                 </span>
+                {captureMode === "webrtc" && (
+                  <span className="text-[10px] font-bold bg-[#3dbb6b]/20 text-[#3dbb6b] px-2 py-0.5 rounded">
+                    LIVE CAMERA
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -329,8 +490,8 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* Video Stage / Bot Container */}
-            <div className="p-6 bg-[#08090c] flex-1 min-h-[380px] flex flex-col items-center justify-center relative">
+            {/* Video Stage Container */}
+            <div className="p-6 bg-[#08090c] flex-1 min-h-[400px] flex flex-col items-center justify-center relative">
               {/* Permission Modal */}
               {testCallState === "pending_permission" && (
                 <div className="max-w-md w-full bg-[#181a24] border border-[#2c303e] rounded-2xl p-6 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
@@ -342,41 +503,86 @@ export default function OnboardingPage() {
                       Fathom Notetaker is requesting to record this meeting
                     </h3>
                     <p className="text-xs text-[#9a9ba1] leading-relaxed">
-                      As the host, approve to let Fathom transcribe the audio, detect action items, and synthesize an AI summary.
+                      {captureMode === "webrtc"
+                        ? "Your camera and microphone will be recorded live. Speak for a moment, and Fathom will generate your real transcript and summary."
+                        : "Fathom will record the test meeting and generate an AI summary with action items."}
                     </p>
+                    {cameraError && (
+                      <p className="text-[11px] text-[#f59e0b] mt-2 bg-[#2a2415] border border-[#f59e0b]/30 p-2 rounded-lg">
+                        {cameraError}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={handleApproveRecording}
                       className="w-full py-2.5 rounded-xl bg-[#00b2ea] hover:bg-[#00c5ff] text-xs font-bold text-black transition-all cursor-pointer shadow-lg shadow-[#00b2ea]/20"
                     >
-                      Approve & Start Recording
+                      Approve &amp; Start Recording
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Active Recording State */}
+              {/* Active Recording Stage */}
               {testCallState === "recording" && (
                 <div className="w-full h-full flex flex-col justify-between space-y-4">
                   {/* Two participant video tiles */}
                   <div className="grid grid-cols-2 gap-4">
+                    {/* User Tile: Real Webcam or Avatar */}
                     <div className="aspect-video bg-[#151720] rounded-xl border border-[#262934] flex flex-col items-center justify-center relative overflow-hidden">
-                      <div className="w-12 h-12 rounded-full bg-[#00b2ea] text-white font-bold flex items-center justify-center text-sm shadow-md">
-                        Host
-                      </div>
-                      <span className="absolute bottom-2 left-2 text-[10px] bg-black/70 px-2 py-0.5 rounded text-white font-medium">
-                        You (Host)
+                      {captureMode === "webrtc" ? (
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="w-full h-full object-cover mirror"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-[#00b2ea] text-white font-bold flex items-center justify-center text-sm shadow-md">
+                          Host
+                        </div>
+                      )}
+
+                      <span className="absolute bottom-2 left-2 text-[10px] bg-black/70 backdrop-blur-xs px-2 py-0.5 rounded text-white font-medium flex items-center gap-1.5 z-10">
+                        <span className="w-2 h-2 rounded-full bg-[#3dbb6b]" />
+                        <span>You (Host)</span>
                       </span>
+
+                      {/* Video Controls overlay */}
+                      {captureMode === "webrtc" && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                          <button
+                            onClick={toggleMic}
+                            className={`p-1.5 rounded-lg text-white transition-colors ${
+                              micEnabled ? "bg-black/60 hover:bg-black/80" : "bg-[#ef4444]"
+                            }`}
+                            title={micEnabled ? "Mute mic" : "Unmute mic"}
+                          >
+                            {micEnabled ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={toggleCamera}
+                            className={`p-1.5 rounded-lg text-white transition-colors ${
+                              cameraEnabled ? "bg-black/60 hover:bg-black/80" : "bg-[#ef4444]"
+                            }`}
+                            title={cameraEnabled ? "Turn off camera" : "Turn on camera"}
+                          >
+                            {cameraEnabled ? <Camera className="w-3.5 h-3.5" /> : <CameraOff className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
+                    {/* Fathom Notetaker Tile */}
                     <div className="aspect-video bg-[#151720] rounded-xl border-2 border-[#3dbb6b] flex flex-col items-center justify-center relative shadow-lg shadow-[#3dbb6b]/10 overflow-hidden">
                       <div className="w-12 h-12 rounded-full bg-[#0f1117] border border-[#2a2d3b] flex items-center justify-center">
                         <FathomSwoosh className="w-6 h-6" />
                       </div>
-                      <span className="absolute bottom-2 left-2 text-[10px] bg-black/70 px-2 py-0.5 rounded text-white font-medium flex items-center gap-1">
+                      <span className="absolute bottom-2 left-2 text-[10px] bg-black/70 backdrop-blur-xs px-2 py-0.5 rounded text-white font-medium flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#3dbb6b]" />
-                        Fathom Notetaker
+                        <span>Fathom Notetaker</span>
                       </span>
                     </div>
                   </div>
@@ -402,18 +608,18 @@ export default function OnboardingPage() {
                       onClick={handleFinishTestCall}
                       className="px-4 py-1.5 bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold text-xs rounded-lg transition-all cursor-pointer shadow-md"
                     >
-                      End Call & View Recording
+                      End Call &amp; View Summary
                     </button>
                   </div>
 
                   {/* Live transcript stream */}
-                  <div className="bg-[#12141a] border border-[#232630] rounded-xl p-3 space-y-2 max-h-32 overflow-y-auto">
+                  <div className="bg-[#12141a] border border-[#232630] rounded-xl p-3 space-y-2 max-h-28 overflow-y-auto">
                     <div className="text-[10px] uppercase font-bold text-[#00b2ea] tracking-wider flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
-                      <span>Live Transcript Stream</span>
+                      <span>Live Speech Detection</span>
                     </div>
                     {simulatedTranscripts.length === 0 ? (
-                      <p className="text-xs text-[#9a9ba1] italic">Listening for conversation...</p>
+                      <p className="text-xs text-[#9a9ba1] italic">Listening for speech...</p>
                     ) : (
                       simulatedTranscripts.map((t, idx) => (
                         <div key={idx} className="text-xs leading-relaxed flex items-start gap-2">
@@ -429,7 +635,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* Processing State with Step Indicators */}
+              {/* Processing Animation */}
               {testCallState === "processing" && (
                 <div className="text-center space-y-5 py-8 max-w-sm w-full animate-in fade-in zoom-in-95 duration-200">
                   <div className="w-14 h-14 rounded-full bg-[#00b2ea]/15 border border-[#00b2ea]/30 flex items-center justify-center text-[#00b2ea] mx-auto shadow-lg">
@@ -441,7 +647,7 @@ export default function OnboardingPage() {
                       Processing meeting recording...
                     </h3>
                     <p className="text-xs text-[#9a9ba1]">
-                      Delivering playback, transcript, and AI summary
+                      Transcribing with Gemini &amp; synthesizing summary
                     </p>
                   </div>
 
@@ -449,7 +655,7 @@ export default function OnboardingPage() {
                   <div className="bg-[#12141a] border border-[#232630] rounded-xl p-4 text-left space-y-2 text-xs">
                     <div className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-[#3dbb6b]" />
-                      <span className="text-white">Audio & video recording captured</span>
+                      <span className="text-white">Camera &amp; audio stream captured</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {processingStep >= 1 ? (
@@ -468,7 +674,7 @@ export default function OnboardingPage() {
                         <span className="w-4 h-4 text-[#4b5160] flex items-center justify-center">○</span>
                       )}
                       <span className={processingStep >= 2 ? "text-white" : "text-[#9a9ba1]"}>
-                        Extracting action items and owner assignments
+                        Extracting action items and owners
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -493,7 +699,7 @@ export default function OnboardingPage() {
                   </div>
                   <h3 className="text-lg font-bold text-white">Opening your recording...</h3>
                   <Link
-                    href="/calls/829997322"
+                    href={`/calls/${createdMeetingId}`}
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#00b2ea] text-black font-bold text-xs hover:bg-[#00c5ff] transition-all"
                   >
                     <span>Click here if not redirected</span>
