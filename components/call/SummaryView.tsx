@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  FileText,
   ChevronDown,
   Sparkles,
   Settings,
+  Check,
+  Copy,
+  Loader2,
 } from "lucide-react";
 import { SummaryContent } from "@/lib/seed-meetings";
-import { Loader2 } from "lucide-react";
 
 interface SummaryViewProps {
   summaryMap: Record<string, SummaryContent>;
@@ -20,9 +21,7 @@ interface SummaryViewProps {
 export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: SummaryViewProps) {
   const [selectedTemplate, setSelectedTemplate] = useState("Enhanced");
   const [selectedLanguage, setSelectedLanguage] = useState("Auto");
-  const [copyWithHyperlinks, setCopyWithHyperlinks] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [showCopyMenu, setShowCopyMenu] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [generatedSummaries, setGeneratedSummaries] = useState<Record<string, SummaryContent>>({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -82,7 +81,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
 
   const currentSummary = mergedMap[selectedTemplate] || mergedMap["Enhanced"];
 
-  const handleCopy = (_targetApp?: string) => {
+  const handleCopy = () => {
     if (!currentSummary) return;
 
     let text = `# Meeting Purpose\n${currentSummary.meeting_purpose}\n\n# Key Takeaways\n`;
@@ -101,8 +100,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
 
     navigator.clipboard.writeText(text);
     setCopied(true);
-    setShowCopyMenu(false);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1000);
   };
 
   const formatTime = (ms: number) => {
@@ -188,71 +186,28 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
           </div>
         </div>
 
-        {/* Copy Summary Blue Button & Menu */}
-        <div className="relative">
-          <button
-            onClick={() => setShowCopyMenu(!showCopyMenu)}
-            className="h-8 px-3 rounded-lg bg-[#00b2ea]/15 hover:bg-[#00b2ea]/25 border border-[#00b2ea]/40 text-[#00b2ea] font-semibold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-          >
-            <span>{copied ? "Copied!" : "Copy Summary"}</span>
-            <FileText className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Dropdown Menu matching 15.png */}
-          {showCopyMenu && (
-            <div className="absolute right-0 mt-1.5 w-52 bg-[#1e2024] border border-[#2f3238] rounded-xl shadow-2xl py-1 z-30 text-xs">
-              <button
-                onClick={() => handleCopy("google-docs")}
-                className="w-full text-left px-3.5 py-2 hover:bg-[#25282e] flex items-center gap-2.5 text-white"
-              >
-                <span>📄</span>
-                <span className="font-medium">Google Docs</span>
-              </button>
-              <button
-                onClick={() => handleCopy("gmail")}
-                className="w-full text-left px-3.5 py-2 hover:bg-[#25282e] flex items-center gap-2.5 text-white"
-              >
-                <span>✉️</span>
-                <span className="font-medium">GMail</span>
-              </button>
-              <button
-                onClick={() => handleCopy("notion")}
-                className="w-full text-left px-3.5 py-2 hover:bg-[#25282e] flex items-center gap-2.5 text-white"
-              >
-                <span>📝</span>
-                <span className="font-medium">Notion</span>
-              </button>
-              <button
-                onClick={() => handleCopy("word")}
-                className="w-full text-left px-3.5 py-2 hover:bg-[#25282e] flex items-center gap-2.5 text-white"
-              >
-                <span>📘</span>
-                <span className="font-medium">Microsoft Word</span>
-              </button>
-
-              <div className="my-1 border-t border-[#26282d]" />
-
-              {/* Copy with hyperlinks toggle */}
-              <div
-                onClick={() => setCopyWithHyperlinks(!copyWithHyperlinks)}
-                className="px-3.5 py-2 hover:bg-[#25282e] flex items-center justify-between text-white cursor-pointer"
-              >
-                <span className="font-medium">Copy with hyperlinks</span>
-                <div
-                  className={`w-7 h-4 rounded-full transition-colors relative flex items-center ${
-                    copyWithHyperlinks ? "bg-[#00b2ea]" : "bg-[#3a3d45]"
-                  }`}
-                >
-                  <div
-                    className={`w-3 h-3 rounded-full bg-white transition-transform ${
-                      copyWithHyperlinks ? "translate-x-3.5" : "translate-x-0.5"
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
+        {/* Direct Copy Summary Button */}
+        <button
+          onClick={handleCopy}
+          className={`h-8 px-3 rounded-lg border font-semibold text-xs flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-xs ${
+            copied
+              ? "bg-[#3dbb6b]/15 border-[#3dbb6b]/40 text-[#3dbb6b]"
+              : "bg-[#00b2ea]/15 hover:bg-[#00b2ea]/25 border-[#00b2ea]/40 text-[#00b2ea]"
+          }`}
+          title="Copy summary to clipboard"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-[#3dbb6b] animate-in zoom-in-75 duration-150" />
+              <span>Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copy Summary</span>
+            </>
           )}
-        </div>
+        </button>
       </div>
 
       {/* Gold Helper Banner Matching Screenshot 15.png */}

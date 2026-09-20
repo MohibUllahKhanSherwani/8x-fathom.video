@@ -674,10 +674,10 @@ export default function RootLandingPage() {
               Pricing
             </Link>
             <Link href="/demo" className="hover:text-white transition-colors">
-              Demo Workspace
+              Workspace
             </Link>
-            <Link href="/calls/829997322" className="hover:text-white transition-colors">
-              Star 8-Person Call
+            <Link href="/calls/829997321" className="hover:text-white transition-colors">
+              Featured Meeting
             </Link>
             <Link href="/login" className="hover:text-white transition-colors">
               Log In

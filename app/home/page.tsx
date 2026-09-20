@@ -163,11 +163,11 @@ export default function HomePage() {
             {loading ? (
               <div className="py-24 flex flex-col items-center justify-center gap-3 text-xs text-[#9a9ba1]">
                 <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
-                <span>Loading calls from Supabase database...</span>
+                <span>Loading calls...</span>
               </div>
             ) : error ? (
               <div className="p-6 rounded-xl bg-[#2a1215] border border-[#f87171]/40 text-xs text-[#fca5a5]">
-                <p className="font-semibold mb-1">Database Error</p>
+                <p className="font-semibold mb-1">Unable to load calls</p>
                 <p>{error}</p>
               </div>
             ) : (
@@ -247,10 +247,8 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         {/* Bottom-left Badge */}
         <div className="absolute left-2 bottom-2 px-2 py-0.5 rounded bg-black/80 backdrop-blur-xs text-[10px] text-white font-medium shadow-sm">
           {meeting.id === "829997322"
-            ? 'Click "Start Recording" in Fathom'
-            : meeting.is_star
-            ? "8-Person Star Meeting"
-            : meeting.owner_name}
+            ? "Quick Test Call"
+            : meeting.owner_name || "Team Call"}
         </div>
 
         {/* Bottom-right Duration Badge */}

@@ -37,12 +37,9 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
 
   // Local state for action items & highlights
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
-  const [highlights, setHighlights] = useState<Array<{ id: string; start_ms: number; end_ms?: number; note?: string }>>([
-    { id: "h1", start_ms: 1470000, end_ms: 1620000, note: "Launch date decision (Nov 18)" },
-    { id: "h2", start_ms: 2160000, end_ms: 2250000, note: "Carlos owns pricing decision" },
-  ]);
+  const [highlights, setHighlights] = useState<Array<{ id: string; start_ms: number; end_ms?: number; note?: string }>>([]);
 
-  // Fetch meeting dynamically from Supabase database
+  // Fetch meeting dynamically from database
   useEffect(() => {
     let isCancelled = false;
     async function loadMeeting() {
@@ -58,8 +55,19 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
           if (data.meeting) {
             setMeeting(data.meeting);
             setActionItems(data.meeting.action_items || []);
+            if (data.meeting.highlights && data.meeting.highlights.length > 0) {
+              setHighlights(data.meeting.highlights);
+            } else if (meetingId === "829997321") {
+              // Star 60-minute roadmap meeting highlights
+              setHighlights([
+                { id: "h1", start_ms: 870000, end_ms: 960000, note: "Launch date decision (Nov 18)" },
+                { id: "h2", start_ms: 1470000, end_ms: 1560000, note: "Carlos owns pricing decision" },
+              ]);
+            } else {
+              setHighlights([]);
+            }
           } else {
-            setError("Call not found in database.");
+            setError("Call not found.");
           }
         }
       } catch (err: unknown) {
@@ -80,13 +88,21 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
     };
   }, [meetingId]);
 
-  const durationMs = (meeting?.duration_sec || 0) * 1000;
+  // Ensure duration accounts for meeting duration_sec, segments, and highlights
+  const maxSegmentEndMs = meeting?.segments?.reduce((max, s) => Math.max(max, s.end_ms), 0) || 0;
+  const maxHighlightEndMs = highlights?.reduce((max, h) => Math.max(max, h.end_ms || h.start_ms), 0) || 0;
+  const durationMs = Math.max((meeting?.duration_sec || 0) * 1000, maxSegmentEndMs, maxHighlightEndMs);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Seek to initial timestamp on mount if specified
   useEffect(() => {
     if (initialTimestamp > 0 && audioRef.current) {
-      audioRef.current.currentTime = initialTimestamp / 1000;
+      try {
+        audioRef.current.currentTime = initialTimestamp / 1000;
+      } catch {
+        // ignore
+      }
     }
   }, [initialTimestamp]);
 
@@ -101,25 +117,43 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
 
   // Handle Play/Pause
   const handlePlayPause = () => {
-    if (!audioRef.current) return;
     if (isPlaying) {
-      audioRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().catch(() => {});
+      if (currentTimeMs >= durationMs && durationMs > 0) {
+        setCurrentTimeMs(0);
+        if (audioRef.current) {
+          try {
+            audioRef.current.currentTime = 0;
+          } catch {
+            // ignore
+          }
+        }
+      }
+      if (audioRef.current) {
+        audioRef.current.play().catch(() => {});
+      }
       setIsPlaying(true);
     }
   };
 
-  // Handle Seek
+  // Handle Seek (always clamped to [0, durationMs])
   const handleSeek = (ms: number) => {
-    setCurrentTimeMs(ms);
+    const clampedMs = Math.max(0, durationMs > 0 ? Math.min(ms, durationMs) : ms);
+    setCurrentTimeMs(clampedMs);
     if (audioRef.current) {
-      audioRef.current.currentTime = ms / 1000;
+      try {
+        audioRef.current.currentTime = clampedMs / 1000;
+      } catch {
+        // ignore
+      }
       if (!isPlaying) {
         audioRef.current.play().catch(() => {});
         setIsPlaying(true);
       }
+    } else {
+      if (!isPlaying) setIsPlaying(true);
     }
   };
 
@@ -131,17 +165,57 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
     }
   };
 
-  // Synchronize audio element time update
+  // Synchronize audio element and graceful playback ticker
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    let lastTime = performance.now();
+    const interval = setInterval(() => {
+      const now = performance.now();
+      const deltaMs = (now - lastTime) * playbackRate;
+      lastTime = now;
+
+      setCurrentTimeMs((prevMs) => {
+        const audio = audioRef.current;
+        // If HTML5 audio is actively playing and advancing, sync with it
+        if (audio && !audio.paused && !audio.ended && audio.currentTime > 0) {
+          const audioMs = Math.round(audio.currentTime * 1000);
+          if (audioMs > 0 && Math.abs(audioMs - prevMs) < 2000) {
+            return Math.min(audioMs, durationMs);
+          }
+        }
+
+        // Graceful fallback clock ticker: advance time smoothly
+        const nextMs = prevMs + deltaMs;
+        if (durationMs > 0 && nextMs >= durationMs) {
+          setIsPlaying(false);
+          if (audio) audio.pause();
+          return durationMs;
+        }
+        return nextMs;
+      });
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, playbackRate, durationMs]);
+
+  // Audio element listeners
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const onTimeUpdate = () => {
-      setCurrentTimeMs(Math.round(audio.currentTime * 1000));
+      if (!audio.paused) {
+        const ms = Math.round(audio.currentTime * 1000);
+        if (durationMs > 0) {
+          setCurrentTimeMs(Math.min(ms, durationMs));
+        }
+      }
     };
 
     const onEnded = () => {
       setIsPlaying(false);
+      if (durationMs > 0) setCurrentTimeMs(durationMs);
     };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
@@ -151,7 +225,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("ended", onEnded);
     };
-  }, []);
+  }, [durationMs]);
 
   // Action item handlers
   const handleToggleDone = async (id: string) => {
@@ -244,7 +318,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         <TopBar />
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-xs text-[#9a9ba1]">
           <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
-          <span>Loading call recording from Supabase database...</span>
+          <span>Loading call recording...</span>
         </div>
       </div>
     );
@@ -257,7 +331,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <h2 className="text-base font-bold text-white mb-2">Call Not Found</h2>
           <p className="text-xs text-[#9a9ba1] mb-4">
-            {error || "The requested call recording could not be retrieved from the database."}
+            {error || "The requested call recording could not be found."}
           </p>
           <Link
             href="/home"

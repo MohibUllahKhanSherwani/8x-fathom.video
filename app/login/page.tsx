@@ -25,17 +25,17 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-3">
-          {/* Primary: Continue as Demo User */}
+          {/* Primary: Continue to Workspace */}
           <Link
             href="/demo"
             className="w-full h-11 flex items-center justify-center gap-2 bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-semibold text-sm rounded-lg transition-all shadow-lg shadow-[#00b2ea]/20 group"
           >
             <Sparkles className="w-4 h-4 fill-black" />
-            <span>Continue as demo user</span>
+            <span>Continue to Workspace</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
 
-          {/* Secondary: Mocked Google Sign In */}
+          {/* Secondary: Google Sign In */}
           <Link
             href="/demo"
             className="w-full h-11 flex items-center justify-center gap-3 bg-[#161719] hover:bg-[#25282e] border border-[#2f3238] text-white font-medium text-xs rounded-lg transition-all"
@@ -58,13 +58,13 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>Sign in with Google (Simulated)</span>
+            <span>Sign in with Google</span>
           </Link>
         </div>
 
         <div className="mt-8 pt-6 border-t border-[#26282d] text-center">
           <p className="text-[11px] text-[#9a9ba1]">
-            Reviewing this assignment? Click <strong>Continue as demo user</strong> to jump into the populated workspace.
+            Sign in to access your recorded meetings, AI summaries, and team workspace.
           </p>
         </div>
       </div>

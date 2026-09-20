@@ -117,7 +117,7 @@ export default function PublicSharePage({ params }: SharePageProps) {
         <TopBar isPublic />
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-xs text-[#9a9ba1]">
           <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
-          <span>Loading shared call from Supabase database...</span>
+          <span>Loading shared call...</span>
         </div>
       </div>
     );
