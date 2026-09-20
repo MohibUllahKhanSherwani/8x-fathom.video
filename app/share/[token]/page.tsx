@@ -7,8 +7,8 @@ import { PlayerControls } from "@/components/call/PlayerControls";
 import { SummaryView } from "@/components/call/SummaryView";
 import { TranscriptView } from "@/components/call/TranscriptView";
 import { ActionItemsView } from "@/components/call/ActionItemsView";
-import { SEED_MEETINGS } from "@/lib/seed-meetings";
-import { Share2 } from "lucide-react";
+import { Meeting } from "@/lib/seed-meetings";
+import { Share2, Loader2 } from "lucide-react";
 
 interface SharePageProps {
   params: Promise<{ token: string }>;
@@ -16,18 +16,55 @@ interface SharePageProps {
 
 export default function PublicSharePage({ params }: SharePageProps) {
   const resolvedParams = use(params);
-  // Default to star meeting for public share preview
-  const meeting = SEED_MEETINGS[0];
+  const token = resolvedParams.token;
+  const targetId = token === "star" || token === "demo" ? "829997321" : token;
+
+  const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<"summary" | "transcript">("summary");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
 
-  const durationMs = meeting.duration_sec * 1000;
+  // Fetch meeting from Supabase database
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadShareMeeting() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/meetings/${targetId}`);
+        if (!res.ok) throw new Error("Failed to load shared call");
+        const data = await res.json();
+        if (!isCancelled) {
+          if (data.meeting) {
+            setMeeting(data.meeting);
+          } else {
+            setError("Shared call not found.");
+          }
+        }
+      } catch (err: unknown) {
+        if (!isCancelled) {
+          const msg = err instanceof Error ? err.message : "Error fetching shared call";
+          setError(msg);
+        }
+      } finally {
+        if (!isCancelled) setLoading(false);
+      }
+    }
+    loadShareMeeting();
+    return () => {
+      isCancelled = true;
+    };
+  }, [targetId]);
+
+  const durationMs = (meeting?.duration_sec || 0) * 1000;
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const activeSpeakerName = (() => {
+    if (!meeting?.segments) return null;
     const currentSegment = meeting.segments.find(
       (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
     );
@@ -73,6 +110,32 @@ export default function PublicSharePage({ params }: SharePageProps) {
       audio.removeEventListener("ended", onEnded);
     };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#111214] flex flex-col select-none">
+        <TopBar isPublic />
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-xs text-[#9a9ba1]">
+          <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
+          <span>Loading shared call from Supabase database...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !meeting) {
+    return (
+      <div className="min-h-screen bg-[#111214] flex flex-col select-none">
+        <TopBar isPublic />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <h2 className="text-base font-bold text-white mb-2">Shared Call Not Found</h2>
+          <p className="text-xs text-[#9a9ba1] mb-4">
+            {error || "This shared recording link is invalid or has expired."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#111214] flex flex-col select-none">

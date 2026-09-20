@@ -14,7 +14,7 @@ export function ShareModal({
   isOpen,
   onClose,
   meetingId,
-  shareToken = "xMwPV7XSwvNge4Fh-3BXRWGoz_QSykHx",
+  shareToken,
 }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
   const [shareEnabled, setShareEnabled] = useState(true);
@@ -26,9 +26,10 @@ export function ShareModal({
 
   if (!isOpen) return null;
 
+  const effectiveToken = shareToken || meetingId;
   const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/share/${shareToken}`
-    : `https://fathom.video/share/${shareToken}`;
+    ? `${window.location.origin}/share/${effectiveToken}`
+    : `https://fathom.video/share/${effectiveToken}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);

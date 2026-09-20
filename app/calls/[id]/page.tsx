@@ -9,8 +9,8 @@ import { TranscriptView } from "@/components/call/TranscriptView";
 import { AskFathomView } from "@/components/call/AskFathomView";
 import { ActionItemsView } from "@/components/call/ActionItemsView";
 import { ShareModal } from "@/components/call/ShareModal";
-import { SEED_MEETINGS, ActionItem } from "@/lib/seed-meetings";
-import { Link2, MoreVertical, Download, Trash2, ArrowLeft } from "lucide-react";
+import { Meeting, ActionItem } from "@/lib/seed-meetings";
+import { Link2, MoreVertical, Download, Trash2, ArrowLeft, Loader2 } from "lucide-react";
 
 interface CallPageProps {
   params: Promise<{ id: string }>;
@@ -24,8 +24,9 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
   const initialTimestamp = resolvedSearchParams?.t ? parseInt(resolvedSearchParams.t, 10) : 0;
   const initialTab = resolvedSearchParams?.tab === "transcript" || resolvedSearchParams?.t ? "transcript" : "summary";
 
-  // Find meeting
-  const initialMeeting = SEED_MEETINGS.find((m) => m.id === meetingId) || SEED_MEETINGS[0];
+  const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<"summary" | "transcript" | "ask">(initialTab);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -35,13 +36,51 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
   const [showKebabMenu, setShowKebabMenu] = useState(false);
 
   // Local state for action items & highlights
-  const [actionItems, setActionItems] = useState<ActionItem[]>(initialMeeting.action_items);
+  const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [highlights, setHighlights] = useState<Array<{ id: string; start_ms: number; end_ms?: number; note?: string }>>([
     { id: "h1", start_ms: 1470000, end_ms: 1620000, note: "Launch date decision (Nov 18)" },
     { id: "h2", start_ms: 2160000, end_ms: 2250000, note: "Carlos owns pricing decision" },
   ]);
 
-  const durationMs = initialMeeting.duration_sec * 1000;
+  // Fetch meeting dynamically from Supabase database
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadMeeting() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/meetings/${meetingId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to load meeting: ${res.statusText}`);
+        }
+        const data = await res.json();
+        if (!isCancelled) {
+          if (data.meeting) {
+            setMeeting(data.meeting);
+            setActionItems(data.meeting.action_items || []);
+          } else {
+            setError("Call not found in database.");
+          }
+        }
+      } catch (err: unknown) {
+        if (!isCancelled) {
+          const msg = err instanceof Error ? err.message : "Error fetching meeting details";
+          setError(msg);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadMeeting();
+    return () => {
+      isCancelled = true;
+    };
+  }, [meetingId]);
+
+  const durationMs = (meeting?.duration_sec || 0) * 1000;
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Seek to initial timestamp on mount if specified
@@ -53,7 +92,8 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
 
   // Find active speaker based on current time
   const activeSpeakerName = (() => {
-    const currentSegment = initialMeeting.segments.find(
+    if (!meeting?.segments) return null;
+    const currentSegment = meeting.segments.find(
       (s) => currentTimeMs >= s.start_ms && currentTimeMs <= s.end_ms
     );
     return currentSegment ? currentSegment.speaker : null;
@@ -114,15 +154,27 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
   }, []);
 
   // Action item handlers
-  const handleToggleDone = (id: string) => {
+  const handleToggleDone = async (id: string) => {
+    const item = actionItems.find((a) => a.id === id);
+    const newDone = !item?.done;
     setActionItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, done: !item.done } : item))
+      prev.map((it) => (it.id === id ? { ...it, done: newDone } : it))
     );
+    try {
+      await fetch("/api/action-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "toggle_done", id, done: newDone }),
+      });
+    } catch (e) {
+      console.error("Failed to persist action item done state:", e);
+    }
   };
 
-  const handleAddManualItem = (text: string, assignee: string) => {
+  const handleAddManualItem = async (text: string, assignee: string) => {
+    const tempId = `manual-${Date.now()}`;
     const newItem: ActionItem = {
-      id: `manual-${Date.now()}`,
+      id: tempId,
       text,
       assignee,
       start_ms: currentTimeMs,
@@ -131,6 +183,31 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
       done: false,
     };
     setActionItems((prev) => [newItem, ...prev]);
+
+    try {
+      const res = await fetch("/api/action-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          meeting_id: meetingId,
+          text,
+          assignee,
+          start_ms: currentTimeMs,
+          source: "manual",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.item?.id) {
+          setActionItems((prev) =>
+            prev.map((it) => (it.id === tempId ? { ...it, id: data.item.id } : it))
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Failed to persist new action item:", e);
+    }
   };
 
   const handleAddHighlight = (start_ms: number, end_ms: number) => {
@@ -148,17 +225,50 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
   };
 
   const handleDownloadTranscript = () => {
-    const content = initialMeeting.segments
+    if (!meeting) return;
+    const content = meeting.segments
       .map((s) => `[${Math.floor(s.start_ms / 60000)}:${Math.floor((s.start_ms % 60000) / 1000)}] ${s.speaker}: ${s.text}`)
       .join("\n");
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${initialMeeting.slug}-transcript.txt`;
+    a.download = `${meeting.id}-transcript.txt`;
     a.click();
     setShowKebabMenu(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#111214] flex flex-col select-none">
+        <TopBar />
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-xs text-[#9a9ba1]">
+          <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
+          <span>Loading call recording from Supabase database...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !meeting) {
+    return (
+      <div className="min-h-screen bg-[#111214] flex flex-col select-none">
+        <TopBar />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <h2 className="text-base font-bold text-white mb-2">Call Not Found</h2>
+          <p className="text-xs text-[#9a9ba1] mb-4">
+            {error || "The requested call recording could not be retrieved from the database."}
+          </p>
+          <Link
+            href="/home"
+            className="px-4 py-2 rounded-lg bg-[#00b2ea] text-black font-semibold text-xs hover:bg-[#00c5ff] transition-colors"
+          >
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#111214] flex flex-col select-none">
@@ -167,7 +277,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
       {/* Hidden Audio Element driving media sync */}
       <audio
         ref={audioRef}
-        src={initialMeeting.audio_url}
+        src={meeting.audio_url}
         preload="metadata"
       />
 
@@ -177,7 +287,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         <div className="flex-1 flex flex-col border-r border-[#26282d] bg-black overflow-y-auto">
           {/* Video Player with Overlay Controls */}
           <VideoPlayer
-            meeting={initialMeeting}
+            meeting={meeting}
             isPlaying={isPlaying}
             onPlayPause={handlePlayPause}
             currentTimeMs={currentTimeMs}
@@ -237,14 +347,20 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
           <div className="flex-1 min-h-[480px]">
             {activeTab === "summary" && (
               <SummaryView
-                summaryMap={initialMeeting.summary}
+                summaryMap={meeting.summary}
                 onSeek={handleSeek}
+                meetingId={meeting.id}
+                onUpdateSummary={(tmpl, content) => {
+                  setMeeting((prev) =>
+                    prev ? { ...prev, summary: { ...prev.summary, [tmpl]: content } } : null
+                  );
+                }}
               />
             )}
             {activeTab === "transcript" && (
               <TranscriptView
-                segments={initialMeeting.segments}
-                participants={initialMeeting.participants}
+                segments={meeting.segments}
+                participants={meeting.participants}
                 currentTimeMs={currentTimeMs}
                 onSeek={handleSeek}
                 onAddHighlight={handleAddHighlight}
@@ -254,7 +370,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             )}
             {activeTab === "ask" && (
               <AskFathomView
-                meetingTitle={initialMeeting.title}
+                meetingTitle={meeting.title}
                 onSeek={handleSeek}
               />
             )}
@@ -274,7 +390,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             </Link>
 
             <h1 className="text-lg font-bold text-white mb-1">
-              {initialMeeting.title}
+              {meeting.title}
             </h1>
 
             <div className="flex items-center gap-2 text-xs text-[#9a9ba1]">
@@ -358,7 +474,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
       <ShareModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
-        meetingId={initialMeeting.id}
+        meetingId={meeting.id}
       />
     </div>
   );

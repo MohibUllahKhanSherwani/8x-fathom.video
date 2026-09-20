@@ -1,4 +1,4 @@
-import { SEED_MEETINGS, Meeting, Segment } from "./seed-meetings";
+import { SEED_MEETINGS } from "./seed-meetings";
 
 export interface SearchMeetingResult {
   id: string;

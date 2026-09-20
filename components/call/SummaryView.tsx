@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FileText,
   ChevronDown,
@@ -8,23 +8,81 @@ import {
   Settings,
 } from "lucide-react";
 import { SummaryContent } from "@/lib/seed-meetings";
+import { Loader2 } from "lucide-react";
 
 interface SummaryViewProps {
   summaryMap: Record<string, SummaryContent>;
   onSeek: (ms: number) => void;
+  meetingId?: string;
+  onUpdateSummary?: (template: string, content: SummaryContent) => void;
 }
 
-export function SummaryView({ summaryMap, onSeek }: SummaryViewProps) {
+export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: SummaryViewProps) {
   const [selectedTemplate, setSelectedTemplate] = useState("Enhanced");
   const [selectedLanguage, setSelectedLanguage] = useState("Auto");
   const [copyWithHyperlinks, setCopyWithHyperlinks] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showCopyMenu, setShowCopyMenu] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [generatedSummaries, setGeneratedSummaries] = useState<Record<string, SummaryContent>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
 
-  const currentSummary = summaryMap[selectedTemplate] || summaryMap["Enhanced"];
+  const mergedMap = useMemo(
+    () => ({ ...summaryMap, ...generatedSummaries }),
+    [summaryMap, generatedSummaries]
+  );
 
-  const handleCopy = (targetApp: string = "clipboard") => {
+  // If selectedTemplate is not in mergedMap and meetingId is provided, generate via /api/summarize
+  useEffect(() => {
+    if (!meetingId) return;
+    if (mergedMap[selectedTemplate]) return;
+
+    let isCancelled = false;
+    async function fetchSummary() {
+      setIsGenerating(true);
+      setGenError(null);
+      try {
+        const res = await fetch("/api/summarize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            meetingId,
+            template: selectedTemplate,
+            language: selectedLanguage === "Auto" ? "en" : selectedLanguage.toLowerCase(),
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to generate summary");
+        }
+
+        if (!isCancelled && data.summary) {
+          setGeneratedSummaries((prev) => ({ ...prev, [selectedTemplate]: data.summary }));
+          onUpdateSummary?.(selectedTemplate, data.summary);
+        }
+      } catch (err: unknown) {
+        if (!isCancelled) {
+          const msg = err instanceof Error ? err.message : "Error generating summary";
+          setGenError(msg);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsGenerating(false);
+        }
+      }
+    }
+
+    fetchSummary();
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedTemplate, selectedLanguage, meetingId, mergedMap, onUpdateSummary]);
+
+  const currentSummary = mergedMap[selectedTemplate] || mergedMap["Enhanced"];
+
+  const handleCopy = (_targetApp?: string) => {
     if (!currentSummary) return;
 
     let text = `# Meeting Purpose\n${currentSummary.meeting_purpose}\n\n# Key Takeaways\n`;
@@ -52,6 +110,24 @@ export function SummaryView({ summaryMap, onSeek }: SummaryViewProps) {
     const sec = Math.floor((ms % 60000) / 1000);
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
+
+  if (isGenerating) {
+    return (
+      <div className="flex flex-col items-center justify-center p-16 gap-3 text-xs text-[#9a9ba1]">
+        <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
+        <span>Generating {selectedTemplate} summary with Gemini LLM...</span>
+      </div>
+    );
+  }
+
+  if (genError) {
+    return (
+      <div className="p-8 text-center text-xs text-[#fca5a5]">
+        <p className="font-semibold mb-2">Error generating summary</p>
+        <p className="text-[#9a9ba1]">{genError}</p>
+      </div>
+    );
+  }
 
   if (!currentSummary) {
     return (

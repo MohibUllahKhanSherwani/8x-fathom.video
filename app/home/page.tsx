@@ -1,30 +1,63 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { TopBar } from "@/components/shell/TopBar";
 import { AskFathomPanel } from "@/components/home/AskFathomPanel";
-import { SEED_MEETINGS, Meeting } from "@/lib/seed-meetings";
+import { Meeting } from "@/lib/seed-meetings";
 import { UploadModal } from "@/components/home/UploadModal";
+import { Loader2 } from "lucide-react";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"my" | "team" | "playlists" | "alerts" | "deals">("my");
   const [isAskFathomOpen, setIsAskFathomOpen] = useState(true);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter meetings based on tab and search query
-  const filteredMeetings = SEED_MEETINGS.filter((m) => {
-    if (activeTab === "team" && m.visibility !== "team") return false;
-    if (activeTab === "my" && m.visibility !== "private") return false;
+  // Fetch meetings dynamically from Supabase database
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadMeetings() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/meetings?tab=${activeTab}`);
+        if (!res.ok) {
+          throw new Error(`Failed to load meetings: ${res.statusText}`);
+        }
+        const data = await res.json();
+        if (!isCancelled) {
+          setMeetings(data.meetings || []);
+        }
+      } catch (err: unknown) {
+        if (!isCancelled) {
+          const msg = err instanceof Error ? err.message : "Error fetching meetings";
+          setError(msg);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadMeetings();
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeTab]);
+
+  // Filter meetings based on search query
+  const filteredMeetings = meetings.filter((m) => {
     if (!searchQuery.trim()) return true;
-
     const q = searchQuery.toLowerCase();
     const titleMatch = m.title.toLowerCase().includes(q);
-    const participantMatch = m.participants.some((p) => p.name.toLowerCase().includes(q));
-    const summaryMatch = m.summary.Enhanced?.key_takeaways.some((t) => t.toLowerCase().includes(q));
-    return titleMatch || participantMatch || summaryMatch;
+    const participantMatch = m.participants?.some((p) => p.name.toLowerCase().includes(q));
+    return titleMatch || participantMatch;
   });
 
   // Group into Today vs Earlier
@@ -74,33 +107,47 @@ export default function HomePage() {
 
           {/* Video Cards Grid */}
           <div className="flex-1 p-6 space-y-8 max-w-[1400px]">
-            {/* Section: Today */}
-            <div>
-              <h2 className="text-sm font-bold text-white mb-4">Today</h2>
-
-              {todayMeetings.length === 0 ? (
-                <div className="py-12 text-center text-xs text-[#9a9ba1]">
-                  No calls recorded today.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                  {todayMeetings.map((meeting) => (
-                    <MeetingCard key={meeting.id} meeting={meeting} />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Section: Earlier Calls */}
-            {earlierMeetings.length > 0 && (
-              <div>
-                <h2 className="text-sm font-bold text-white mb-4">Earlier</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                  {earlierMeetings.map((meeting) => (
-                    <MeetingCard key={meeting.id} meeting={meeting} />
-                  ))}
-                </div>
+            {loading ? (
+              <div className="py-24 flex flex-col items-center justify-center gap-3 text-xs text-[#9a9ba1]">
+                <Loader2 className="w-6 h-6 animate-spin text-[#00b2ea]" />
+                <span>Loading calls from Supabase database...</span>
               </div>
+            ) : error ? (
+              <div className="p-6 rounded-xl bg-[#2a1215] border border-[#f87171]/40 text-xs text-[#fca5a5]">
+                <p className="font-semibold mb-1">Database Error</p>
+                <p>{error}</p>
+              </div>
+            ) : (
+              <>
+                {/* Section: Today */}
+                <div>
+                  <h2 className="text-sm font-bold text-white mb-4">Today</h2>
+
+                  {todayMeetings.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-[#9a9ba1]">
+                      No calls recorded today.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                      {todayMeetings.map((meeting) => (
+                        <MeetingCard key={meeting.id} meeting={meeting} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Section: Earlier Calls */}
+                {earlierMeetings.length > 0 && (
+                  <div>
+                    <h2 className="text-sm font-bold text-white mb-4">Earlier</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                      {earlierMeetings.map((meeting) => (
+                        <MeetingCard key={meeting.id} meeting={meeting} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>

@@ -1,17 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo, FathomSwoosh } from "@/components/brand/Logo";
 import {
   Calendar,
   Check,
-  CheckCircle2,
   ChevronRight,
-  Sparkles,
-  Play,
-  Volume2,
   Users,
   Star,
   Shield,
@@ -19,7 +14,6 @@ import {
 } from "lucide-react";
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Step 1: Calendar

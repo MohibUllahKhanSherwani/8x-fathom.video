@@ -40,3 +40,8 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 - **Decision**: Implement automatic API key redaction in `.agents/scripts/capture_turn.py` before committing `.agent-logs/`.
 - **Rationale**: Protects secrets from being leaked to GitHub and prevents GitHub Push Protection rejections.
 
+### D-010: 100% Database-Driven Production Architecture
+- **Decision**: Completely eliminate in-app static seed data dependencies from the UI. Home page, Call page, Share page, and Clip page dynamically fetch data from Supabase via API routes.
+- **Rationale**: The product must be true production-grade: meetings, participants, segments, summaries, and action items are queried live from Supabase PostgreSQL. Summary templates are generated on-demand via Gemini `gemini-3.6-flash` and cached in the database. Action items persist checked states and new items directly to the database. Global search executes live PostgreSQL Full-Text Search via GIN-indexed `tsv`.
+
+

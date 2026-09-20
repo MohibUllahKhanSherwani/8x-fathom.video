@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, use } from "react";
 import Link from "next/link";
 import { Play, Pause, RotateCcw, Volume2, ArrowUpRight, Share2, Sparkles, Clock } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { SEED_MEETINGS } from "@/lib/seed-meetings";
+import { Meeting } from "@/lib/seed-meetings";
 
 interface ClipPageProps {
   params: Promise<{ token: string }>;
@@ -24,7 +24,7 @@ interface ClipData {
 const PRESET_CLIPS: Record<string, ClipData> = {
   "launch-decision": {
     title: "Official Launch Date Decision (Nov 18)",
-    meetingId: "829997322",
+    meetingId: "829997321",
     meetingTitle: "Q4 Roadmap Planning",
     start_ms: 1470000,
     end_ms: 1620000,
@@ -34,7 +34,7 @@ const PRESET_CLIPS: Record<string, ClipData> = {
   },
   "pricing-matrix": {
     title: "Pro Tier Pricing & Discount Matrix Ownership",
-    meetingId: "829997322",
+    meetingId: "829997321",
     meetingTitle: "Q4 Roadmap Planning",
     start_ms: 2160000,
     end_ms: 2280000,
@@ -50,7 +50,29 @@ export default function ClipPage({ params }: ClipPageProps) {
 
   // Fallback to launch-decision if token not recognized
   const clip = PRESET_CLIPS[token] || PRESET_CLIPS["launch-decision"];
-  const meeting = SEED_MEETINGS.find((m) => m.id === clip.meetingId) || SEED_MEETINGS[0];
+  const [meeting, setMeeting] = useState<Meeting | null>(null);
+
+  // Fetch meeting from Supabase database
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadClipMeeting() {
+      try {
+        const res = await fetch(`/api/meetings/${clip.meetingId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data.meeting) {
+            setMeeting(data.meeting);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load clip meeting:", e);
+      }
+    }
+    loadClipMeeting();
+    return () => {
+      isCancelled = true;
+    };
+  }, [clip.meetingId]);
 
   const clipDurationMs = clip.end_ms - clip.start_ms;
   const clipDurationSec = clipDurationMs / 1000;
@@ -157,7 +179,7 @@ export default function ClipPage({ params }: ClipPageProps) {
       </header>
 
       {/* Hidden Audio Element */}
-      <audio ref={audioRef} src={meeting.audio_url} preload="metadata" />
+      <audio ref={audioRef} src={meeting?.audio_url || ""} preload="metadata" />
 
       {/* Main Clip Player Container */}
       <main className="flex-1 flex items-center justify-center p-6">

@@ -13,11 +13,10 @@ import {
   Clock,
   MessageSquare,
   ChevronRight,
-  User,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { DEMO_USER } from "@/lib/constants";
-import { searchMeetings, GlobalSearchResults } from "@/lib/search";
+import type { GlobalSearchResults } from "@/lib/search";
 
 interface TopBarProps {
   isPublic?: boolean;
@@ -46,19 +45,34 @@ export function TopBar({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  // Debounced search to /api/search (PostgreSQL Full-Text Search on Supabase)
+  useEffect(() => {
+    if (!query.trim()) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+          setIsOpen(true);
+          setSelectedIndex(0);
+        }
+      } catch (err) {
+        console.error("Error executing database search:", err);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const handleQueryChange = (val: string) => {
     if (externalOnSearchChange) {
       externalOnSearchChange(val);
     } else {
       setInternalQuery(val);
     }
-
-    if (val.trim()) {
-      const results = searchMeetings(val);
-      setSearchResults(results);
-      setIsOpen(true);
-      setSelectedIndex(0);
-    } else {
+    if (!val.trim()) {
       setSearchResults(null);
       setIsOpen(false);
     }

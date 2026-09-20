@@ -7,7 +7,6 @@ import {
   RotateCcw,
   RotateCw,
   Volume2,
-  VolumeX,
   Maximize2,
 } from "lucide-react";
 import { SummaryTopic } from "@/lib/seed-meetings";

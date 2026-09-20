@@ -6,7 +6,6 @@ import {
   Upload,
   X,
   FileAudio,
-  CheckCircle2,
   AlertCircle,
   Sparkles,
   ArrowRight,
