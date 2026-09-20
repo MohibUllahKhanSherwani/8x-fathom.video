@@ -50,23 +50,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // If GEMINI_API_KEY is present, perform live model completion with Gemini
-    if (apiKey) {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey });
-      const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+    // Require GEMINI_API_KEY for live AI responses (Fail Loudly)
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          error: "GEMINI_API_KEY is missing from environment. Live AI responses require a valid Gemini API key.",
+        },
+        { status: 500 }
+      );
+    }
 
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey });
+    const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
-      const context = targetMeetings
-        .map((m) => {
-          const transcriptSnippet = m.segments
-            .map((s) => `[${Math.floor(s.start_ms / 60000)}:${Math.floor((s.start_ms % 60000) / 1000).toString().padStart(2, "0")}] ${s.speaker}: ${s.text}`)
-            .join("\n");
-          return `Meeting: "${m.title}" (ID: ${m.id})\nTakeaways:\n${m.summary.Enhanced?.key_takeaways.join("\n")}\n\nTranscript:\n${transcriptSnippet}`;
-        })
-        .join("\n\n---\n\n");
+    const context = targetMeetings
+      .map((m) => {
+        const transcriptSnippet = m.segments
+          .map((s) => `[${Math.floor(s.start_ms / 60000)}:${Math.floor((s.start_ms % 60000) / 1000).toString().padStart(2, "0")}] ${s.speaker}: ${s.text}`)
+          .join("\n");
+        return `Meeting: "${m.title}" (ID: ${m.id})\nTakeaways:\n${m.summary.Enhanced?.key_takeaways.join("\n")}\n\nTranscript:\n${transcriptSnippet}`;
+      })
+      .join("\n\n---\n\n");
 
-      const prompt = `You are Fathom AI, an intelligent meeting assistant.
+    const prompt = `You are Fathom AI, an intelligent meeting assistant.
 Answer the user's question directly, concisely, and accurately based on the meeting context provided below.
 When quoting or referencing a specific moment from a meeting, include the exact timestamp in brackets like [MM:SS] (e.g. [24:30]).
 
@@ -75,33 +82,23 @@ ${context}
 
 User Question: ${query}`;
 
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: prompt,
-      });
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+    });
 
-      const text = response.text || "No response generated.";
+    const text = response.text || "No response generated from Gemini.";
 
-      return NextResponse.json({
-        text,
-        citations: extractCitationsFromText(text, targetMeetings[0]?.id || "829997322"),
-      });
-    }
-
-
-    // Deterministic Intelligent Answer Engine (PRD Planted Facts & Knowledge Base)
-    const { answer, citations } = generateDeterministicAnswer(cleanQuery, targetMeetings, meetingId);
-
-    // Return structured JSON response with text and citations
     return NextResponse.json({
-      text: answer,
-      citations,
+      text,
+      citations: extractCitationsFromText(text, targetMeetings[0]?.id || "829997322"),
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
+
 
 function extractCitationsFromText(text: string, defaultMeetingId: string): Citation[] {
   const citations: Citation[] = [];
