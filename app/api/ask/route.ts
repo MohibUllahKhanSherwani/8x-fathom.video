@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as chrono from "chrono-node";
-import { SEED_MEETINGS, Meeting, Segment, ActionItem } from "@/lib/seed-meetings";
+import { SEED_MEETINGS, Meeting } from "@/lib/seed-meetings";
 
 interface AskRequestBody {
   query: string;
@@ -24,8 +24,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
-    const cleanQuery = query.trim().toLowerCase();
-
     // Check if user has provided GEMINI_API_KEY
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -42,12 +40,7 @@ export async function POST(req: NextRequest) {
       });
 
       // Date phrase parsing using chrono-node
-      const parsedDate = chrono.parse(query);
-      if (parsedDate && parsedDate.length > 0) {
-        const referenceDate = parsedDate[0].start.date();
-        // Target meetings within a reasonable window of the parsed date
-        // Seed meetings have offset minutes from now
-      }
+      chrono.parse(query);
     }
 
     // Require GEMINI_API_KEY for live AI responses (Fail Loudly)

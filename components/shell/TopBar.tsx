@@ -177,12 +177,12 @@ export function TopBar({
       <div className="flex items-center gap-6 flex-1 max-w-xl">
         <Logo href="/home" />
 
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-[#9a9ba1] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="relative flex-1 max-w-sm">
+          <Search className="w-3.5 h-3.5 text-[#9a9ba1] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search Call Recordings... (press /)"
+            placeholder="Search Call Recordings"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => {
@@ -190,11 +190,8 @@ export function TopBar({
               if (query.trim()) setIsOpen(true);
             }}
             onKeyDown={handleKeyDown}
-            className="w-full h-9 pl-9 pr-8 bg-[#1e2024] hover:bg-[#25282e] focus:bg-[#25282e] border border-[#2f3238] focus:border-[#00b2ea] rounded-full text-xs text-white placeholder-[#9a9ba1] outline-none transition-all shadow-inner"
+            className="w-full h-8 pl-8 pr-4 bg-[#1e2024] hover:bg-[#25282e] focus:bg-[#25282e] border border-[#2f3238] focus:border-[#00b2ea] rounded-md text-xs text-white placeholder-[#9a9ba1] outline-none transition-all"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#9a9ba1] bg-[#2a2c32] px-1.5 py-0.5 rounded border border-[#3a3d45]">
-            /
-          </span>
 
           {/* Search Dropdown */}
           {isOpen && searchResults && (

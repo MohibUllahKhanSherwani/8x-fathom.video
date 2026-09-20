@@ -52,6 +52,7 @@ export interface Meeting {
   is_external: boolean;
   is_star?: boolean;
   audio_url?: string;
+  thumbnail_url?: string;
   participants: Participant[];
   summary: Record<string, SummaryContent>;
   action_items: ActionItem[];
@@ -67,11 +68,75 @@ export function getRollingTimestamp(offsetMinutes: number): string {
 export const SEED_MEETINGS: Meeting[] = [
   {
     id: "829997322",
+    slug: "test-call",
+    title: "Test call",
+    duration_sec: 120, // 2 mins
+    seed_offset_minutes: 15, // Today, 15 mins ago
+    owner_name: "mohib khan",
+    visibility: "private",
+    platform: "zoom",
+    is_external: false,
+    thumbnail_url: "/thumbnails/test-call.jpg",
+    audio_url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    participants: [
+      { id: "p0", name: "mohib khan", role: "Host", color: "#0084ff", is_host: true, talk_pct: 10 },
+      { id: "p1", name: "Emmily Bowman (Demo)", role: "Product Specialist", color: "#3dbb6b", talk_pct: 85 },
+      { id: "p2", name: "mohib's Fathom Notetaker", role: "AI Notetaker", color: "#f59e0b", talk_pct: 5 }
+    ],
+    summary: {
+      Enhanced: {
+        meeting_purpose: "Demo Fathom's core features and workflow.",
+        key_takeaways: [
+          "Fathom automatically records meetings and emails a summary with action items within 30 seconds of the call ending.",
+          "The in-meeting panel provides real-time controls to manually create highlights or stop recording.",
+          "After the call, the panel's 'View Recording and Summary' button links directly to the call recording page."
+        ],
+        topics: [
+          {
+            title: "Fathom's Core Workflow",
+            start_ms: 0,
+            bullets: [
+              "Join: Fathom joins via a button on the in-meeting panel.",
+              "Record: It captures audio and video locally or in the cloud.",
+              "Highlight: Real-time bookmarking during important call moments.",
+              "Deliver: 30-second turnaround for AI summary and action items."
+            ]
+          }
+        ],
+        next_steps: [
+          "Start using Fathom on upcoming client and team calls",
+          "Customize summary templates in Settings"
+        ]
+      },
+      General: {
+        meeting_purpose: "Quick introductory test call to demo Fathom recording and summaries.",
+        key_takeaways: [
+          "Recorded via Zoom in-meeting integration.",
+          "Summaries delivered within 30 seconds."
+        ],
+        topics: [
+          { title: "Test Call Overview", start_ms: 0, bullets: ["Walkthrough of recording features and highlight controls."] }
+        ],
+        next_steps: ["Explore Ask Fathom and transcript sync."]
+      }
+    },
+    action_items: [],
+    segments: [
+      { id: 1, speaker: "Emmily Bowman (Demo)", start_ms: 0, end_ms: 12000, text: "Fathom panel also on your button. Go ahead and click that button so that Fathom can join this meeting now." },
+      { id: 2, speaker: "Emmily Bowman (Demo)", start_ms: 12500, end_ms: 24000, text: "Here is where the magic happens. Fathom has your back. You don't have to click a single button or take a single note." },
+      { id: 3, speaker: "Emmily Bowman (Demo)", start_ms: 24500, end_ms: 42000, text: "Fathom will capture all of the important moments and action items and then will deliver them to your inbox within 30 seconds of the meeting ending." },
+      { id: 4, speaker: "Emmily Bowman (Demo)", start_ms: 42500, end_ms: 60000, text: "You don't have to click a thing, but say that a really special moment on the call does happen that you know you want to go back and rewatch." },
+      { id: 5, speaker: "Emmily Bowman (Demo)", start_ms: 60500, end_ms: 85000, text: "There's a highlight button on that Fathom panel. When you click it, Fathom bookmarks the exact second in the transcript." },
+      { id: 6, speaker: "Emmily Bowman (Demo)", start_ms: 85500, end_ms: 118000, text: "When you're finished, just click 'View Recording and Summary' to open your complete summary, interactive transcript, and Ask Fathom assistant!" }
+    ]
+  },
+  {
+    id: "829997321",
     slug: "q4-roadmap-planning",
     title: "Q4 Roadmap Planning",
     duration_sec: 3600,
     seed_offset_minutes: 1440, // 1 day ago
-    owner_name: "Alex Rivera",
+    owner_name: "mohib khan",
     visibility: "private",
     platform: "zoom",
     is_external: false,

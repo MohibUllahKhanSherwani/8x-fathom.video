@@ -2,17 +2,15 @@
 
 import React, { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { TopBar } from "@/components/shell/TopBar";
-import { SpeakerStage } from "@/components/call/SpeakerStage";
-import { PlayerControls } from "@/components/call/PlayerControls";
+import { VideoPlayer } from "@/components/call/VideoPlayer";
 import { SummaryView } from "@/components/call/SummaryView";
 import { TranscriptView } from "@/components/call/TranscriptView";
 import { AskFathomView } from "@/components/call/AskFathomView";
 import { ActionItemsView } from "@/components/call/ActionItemsView";
 import { ShareModal } from "@/components/call/ShareModal";
-import { SEED_MEETINGS, Meeting, ActionItem } from "@/lib/seed-meetings";
-import { Share2, MoreVertical, Download, Trash2, ArrowLeft } from "lucide-react";
+import { SEED_MEETINGS, ActionItem } from "@/lib/seed-meetings";
+import { Link2, MoreVertical, Download, Trash2, ArrowLeft } from "lucide-react";
 
 interface CallPageProps {
   params: Promise<{ id: string }>;
@@ -52,7 +50,6 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
       audioRef.current.currentTime = initialTimestamp / 1000;
     }
   }, [initialTimestamp]);
-
 
   // Find active speaker based on current time
   const activeSpeakerName = (() => {
@@ -174,19 +171,13 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         preload="metadata"
       />
 
-      {/* Two-Column Call Layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1600px] w-full mx-auto">
-        {/* LEFT COLUMN: Player + Speaker Stage + Tabs (Summary / Transcript / Ask) */}
+      {/* Two-Column Call Layout Matching 15.png */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1440px] w-full mx-auto">
+        {/* LEFT COLUMN: Player + Tabs (Summary / Transcript / Ask) */}
         <div className="flex-1 flex flex-col border-r border-[#26282d] bg-black overflow-y-auto">
-          {/* Speaker Stage */}
-          <SpeakerStage
-            participants={initialMeeting.participants}
-            activeSpeakerName={activeSpeakerName}
-            currentTimeMs={currentTimeMs}
-          />
-
-          {/* Player Controls */}
-          <PlayerControls
+          {/* Video Player with Overlay Controls */}
+          <VideoPlayer
+            meeting={initialMeeting}
             isPlaying={isPlaying}
             onPlayPause={handlePlayPause}
             currentTimeMs={currentTimeMs}
@@ -194,12 +185,11 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             onSeek={handleSeek}
             playbackRate={playbackRate}
             onPlaybackRateChange={handlePlaybackRateChange}
-            topics={initialMeeting.summary.Enhanced?.topics}
-            highlights={highlights}
+            activeSpeakerName={activeSpeakerName}
           />
 
-          {/* Three Navigation Tabs */}
-          <div className="h-11 border-b border-[#26282d] px-6 flex items-center gap-8 bg-black select-none shrink-0">
+          {/* Three Navigation Tabs: SUMMARY, TRANSCRIPT, ASK FATHOM */}
+          <div className="h-10 border-b border-[#26282d] px-6 flex items-center gap-8 bg-black select-none shrink-0">
             <button
               onClick={() => setActiveTab("summary")}
               className={`h-full font-bold text-xs uppercase tracking-wider transition-colors relative cursor-pointer ${
@@ -244,7 +234,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
           </div>
 
           {/* Active Tab Content Area */}
-          <div className="flex-1 min-h-[500px]">
+          <div className="flex-1 min-h-[480px]">
             {activeTab === "summary" && (
               <SummaryView
                 summaryMap={initialMeeting.summary}
@@ -258,7 +248,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
                 currentTimeMs={currentTimeMs}
                 onSeek={handleSeek}
                 onAddHighlight={handleAddHighlight}
-                onAddActionItem={(text, ms) => handleAddManualItem(text, "From transcript")}
+                onAddActionItem={(text) => handleAddManualItem(text, "From transcript")}
                 highlights={highlights}
               />
             )}
@@ -271,45 +261,41 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Metadata, Share, Action Items, Highlights */}
-        <aside className="w-full lg:w-[420px] bg-[#161719] p-6 overflow-y-auto space-y-6 shrink-0 border-t lg:border-t-0 border-[#26282d]">
+        {/* RIGHT COLUMN: Metadata, Share, Action Items */}
+        <aside className="w-full lg:w-[380px] bg-[#111214] p-6 overflow-y-auto space-y-6 shrink-0 border-t lg:border-t-0 border-[#26282d]">
           {/* Header & Back Link */}
           <div>
             <Link
               href="/home"
-              className="inline-flex items-center gap-1.5 text-xs text-[#9a9ba1] hover:text-white transition-colors mb-3"
+              className="inline-flex items-center gap-1.5 text-xs text-[#9a9ba1] hover:text-white transition-colors mb-4"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to all calls</span>
             </Link>
 
-            <h1 className="text-xl font-bold text-white mb-1.5 leading-snug">
+            <h1 className="text-lg font-bold text-white mb-1">
               {initialMeeting.title}
             </h1>
 
             <div className="flex items-center gap-2 text-xs text-[#9a9ba1]">
               <span>Sep 20, 2026</span>
-              <span>•</span>
-              <span>{Math.round(initialMeeting.duration_sec / 60)} mins</span>
-              <span>•</span>
-              <span className="capitalize">{initialMeeting.platform}</span>
             </div>
           </div>
 
-          {/* Share Button & Kebab Menu */}
+          {/* Share Button & Kebab Menu Matching 15.png */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsShareOpen(true)}
-              className="flex-1 h-10 px-4 rounded-xl border border-[#00b2ea] bg-[#00b2ea]/12 hover:bg-[#00b2ea]/20 text-[#00b2ea] font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+              className="flex-1 h-9 px-4 rounded-md border border-[#00b2ea]/40 bg-[#00b2ea]/12 hover:bg-[#00b2ea]/20 text-[#00b2ea] font-semibold text-xs flex items-center justify-between transition-all cursor-pointer shadow-xs"
             >
-              <Share2 className="w-4 h-4 stroke-[2.5]" />
               <span>Share</span>
+              <Link2 className="w-3.5 h-3.5" />
             </button>
 
             <div className="relative">
               <button
                 onClick={() => setShowKebabMenu(!showKebabMenu)}
-                className="w-10 h-10 rounded-xl bg-[#1e2024] hover:bg-[#25282e] border border-[#2f3238] flex items-center justify-center text-[#9a9ba1] hover:text-white transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-md bg-[#1e2024] hover:bg-[#25282e] border border-[#2f3238] flex items-center justify-center text-[#9a9ba1] hover:text-white transition-colors cursor-pointer"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -344,16 +330,26 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             </div>
           </div>
 
-          {/* Action Items Component */}
-          <div className="pt-2">
-            <ActionItemsView
-              actionItems={actionItems}
-              onToggleDone={handleToggleDone}
-              onAddManualItem={handleAddManualItem}
-              onSeek={handleSeek}
-              highlights={highlights}
-              onDeleteHighlight={handleDeleteHighlight}
-            />
+          {/* ACTION ITEMS Header & List Matching 15.png */}
+          <div>
+            <h2 className="text-[11px] font-bold text-[#9a9ba1] uppercase tracking-wider mb-3">
+              ACTION ITEMS
+            </h2>
+
+            {actionItems.length === 0 ? (
+              <div className="p-4 rounded-xl bg-[#161719] border border-[#26282d] text-xs text-[#9a9ba1] italic">
+                None detected. Add manually on transcript tab
+              </div>
+            ) : (
+              <ActionItemsView
+                actionItems={actionItems}
+                onToggleDone={handleToggleDone}
+                onAddManualItem={handleAddManualItem}
+                onSeek={handleSeek}
+                highlights={highlights}
+                onDeleteHighlight={handleDeleteHighlight}
+              />
+            )}
           </div>
         </aside>
       </div>

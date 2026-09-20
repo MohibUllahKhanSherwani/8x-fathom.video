@@ -23,3 +23,20 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 ### D-005: Per-Visitor Sandbox via Cookie Session
 - **Decision**: Use an httpOnly `session_id` cookie for visitors. Seed meetings are shared and read-only; visitor highlights, notes, action item completions, uploads, and chat history are isolated to their session.
 - **Rationale**: Allows reviewers to freely test without signing up, while keeping their state private and preventing mutual state collisions.
+
+### D-006: UI Exact Parity via Ground-Truth Flow Captures
+- **Decision**: Redesign TopBar, HomePage, AskFathomPanel, CallPage, and SettingsPage to replicate pixel-for-pixel the ground truth flow captures in `pics_of_flow/` (`1.png` to `18.png`) and the live home screenshot.
+- **Rationale**: The 8x rubric heavily weights UX & UI fidelity to `fathom.video`. Incorporating the exact 16:9 thumbnail view, subheader navigation tabs (`My Calls`, `Team Calls`, `Playlists`, `Alerts`, `Deals`), gold announcement banner, and overlay video controls creates an indistinguishable clone.
+
+### D-007: Dual Support for Real Test Call & 8-Person 60-Min Star Call
+- **Decision**: Include both the authentic 2-minute "Test call" (meeting `829997322` matching the user's flow and screenshot 15.png) and the full 8-person 60-minute "Q4 Roadmap Planning" call (meeting `829997321` with all planted facts required by the 8x brief).
+- **Rationale**: Satisfies both the user's visual expectation of seeing their exact test call from the screenshots and the reviewer's evaluation criteria of inspecting the 8-person, 60-minute roadmap call.
+
+### D-008: Fail Loudly Architecture with Gemini 3.6 Flash
+- **Decision**: Eliminate silent fallbacks in `/api/ask` and `/api/health`. Use Google's recommended `gemini-3.6-flash` model and require a valid `GEMINI_API_KEY` in environment.
+- **Rationale**: The user explicitly instructed to "fail loudly" if an LLM or database is missing or fails. `gemini-3.6-flash` is fast (~1s latency), reliable, and handles complex multi-meeting reasoning without 503 throttling.
+
+### D-009: Secret Scrubbing in Agent Logs
+- **Decision**: Implement automatic API key redaction in `.agents/scripts/capture_turn.py` before committing `.agent-logs/`.
+- **Rationale**: Protects secrets from being leaked to GitHub and prevents GitHub Push Protection rejections.
+
