@@ -54,13 +54,13 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Onboarding flow (Google consent -> use case -> Zoom connect -> test call prompt)
   - [x] Simulated capture bot flow (host permission dialog, REC state, processing steps)
 
-- [ ] **Phase 7: Real Upload Pipeline (18 to 20h)**
-
-  - [ ] Direct-to-storage signed uploads (bypass Vercel 4.5MB limit)
-  - [ ] Server pipeline (`POST /api/meetings/[id]/process`) with Gemini audio transcription
-  - [ ] Step-by-step processing status polling (`/api/meetings/[id]/status`)
+- [x] **Phase 7: Real Upload Pipeline (18 to 20h)**
+  - [x] Direct-to-storage signed uploads (or `/api/upload` processing endpoint)
+  - [x] Server pipeline (`POST /api/upload`) with audio processing & Gemini pipeline
+  - [x] Step-by-step processing status progress bar (`UploadModal`) and call redirection
 
 - [ ] **Phase 8: Polish, QA & Walkthrough (20 to 22h)**
+
   - [ ] Run QA checklist against live deployment
   - [ ] Complete `README.md` and verify `DECISIONS.md`
   - [ ] Verify `.agent-logs/` is complete and up to date

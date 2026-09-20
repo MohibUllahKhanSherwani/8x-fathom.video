@@ -5,11 +5,13 @@ import Link from "next/link";
 import { TopBar } from "@/components/shell/TopBar";
 import { AskFathomPanel } from "@/components/home/AskFathomPanel";
 import { SEED_MEETINGS, getRollingTimestamp, Meeting } from "@/lib/seed-meetings";
-import { Plus, CheckSquare, Clock, Users, ArrowUpRight } from "lucide-react";
+import { Plus, CheckSquare, Clock, Users, ArrowUpRight, Upload } from "lucide-react";
+import { UploadModal } from "@/components/home/UploadModal";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<"my" | "team">("my");
   const [isAskFathomOpen, setIsAskFathomOpen] = useState(true);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter meetings based on tab and search query
@@ -90,6 +92,14 @@ export default function HomePage() {
 
             {/* Subheader Actions */}
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsUploadOpen(true)}
+                className="h-8 px-3 rounded-lg bg-[#1e2024] hover:bg-[#25282e] border border-[#2f3238] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Upload className="w-3.5 h-3.5 text-[#00b2ea]" />
+                <span>Upload Recording</span>
+              </button>
+
               <Link
                 href="/onboarding"
                 className="h-8 px-3.5 bg-[#00b2ea] hover:bg-[#00c5ff] text-black font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
@@ -99,6 +109,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+
 
           {/* Meeting List Container */}
           <div className="flex-1 p-8 max-w-5xl w-full mx-auto space-y-3">
@@ -203,6 +214,13 @@ export default function HomePage() {
           onToggle={() => setIsAskFathomOpen(!isAskFathomOpen)}
         />
       </div>
+
+      {/* Upload Recording Modal */}
+      <UploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+      />
     </div>
   );
 }
+
