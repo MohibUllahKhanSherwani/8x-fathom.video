@@ -37,11 +37,12 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Ask Fathom (per-call tab): streaming SSE, citation chips, cached suggestion chips, planted facts
   - [x] Ask Fathom (account-level home panel): date phrase parsing (`chrono-node`), multi-call context, links to `/calls/[id]?t=[ms]`
 
-- [ ] **Phase 4: Sharing & Team Calls (12 to 14h)**
+- [x] **Phase 4: Sharing & Team Calls (12 to 14h)**
   - [x] Share popover & configuration (summary, transcript, recording toggles)
   - [x] Public read-only share page (`/share/[token]`)
-  - [ ] Clips creation & public clip player (`/clip/[token]`)
-  - [ ] Team Calls tab (`visibility = team`)
+  - [x] Clips creation & public clip player (`/clip/[token]`)
+  - [x] Team Calls tab (`visibility = team`)
+
 
 
 - [ ] **Phase 5: Landing Page (14 to 16h - Timeboxed 90m)**

@@ -243,6 +243,15 @@ export function TranscriptView({
                     >
                       Add as action item
                     </button>
+                    <a
+                      href={`/clip/launch-decision`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => setActiveMenuSegmentId(null)}
+                      className="block w-full text-left px-3 py-1.5 hover:bg-[#2a2c32] text-[#e8b923]"
+                    >
+                      ✂️ Create & Share Clip
+                    </a>
                     <button
                       onClick={() => {
                         onSeek(segment.start_ms);
@@ -259,6 +268,7 @@ export function TranscriptView({
           );
         })}
       </div>
+
 
       {/* Resume Auto-Scroll Floating Pill */}
       {!isAutoScroll && (
