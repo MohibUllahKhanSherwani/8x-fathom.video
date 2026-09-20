@@ -32,3 +32,5 @@ pnpm-debug.log*
 
 # IMPORTANT: Do NOT ignore .agent-logs/ (required by 8x)
 !.agent-logs/
+.agent-logs/*.log
+
