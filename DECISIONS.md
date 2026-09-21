@@ -55,3 +55,9 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 - **Decision**: Revert the synthetic action banner on the Home page (`/home`) and align the layout pixel-for-pixel with the user's live Fathom screenshot. Display distinct subheader tabs (`My Calls` with cyan underline and "Click to return home" tooltip, `Team Calls`, `Playlists`, `Alerts`, `Deals`), clean `Today` section featuring `Test call` with the exact bottom-left overlay badge (`Click "Start Recording" in Fathom`), `2 mins` duration badge, and three-dots action menu, followed by older seeded videos under `Earlier`.
 - **Rationale**: The user provided an exact reference screenshot from their live session. Preserving ground-truth parity without extraneous banners or deviations ensures zero uncanny valley and directly satisfies the 8x UX/UI evaluation rubric.
 
+### D-014: Multi-Key Rotation & Automatic Quota Failover with Retry
+- **Decision**: Implement a resilient Gemini client in `lib/gemini.ts` that detects all available API keys (`GEMINI_API_KEY`, `GEMINI_API_KEY_2`, `GEMINI_API_KEY_3`, or comma-separated lists), automatically detects 429 quota exhaustion or rate limits, and immediately rotates to the next available API key with exponential backoff retry.
+- **Rationale**: During live testing and reviewer evaluations, LLM quotas can be saturated rapidly. Automatic key rotation and retry ensure zero downtime, preventing 429 errors from degrading reviewer demonstrations or AI summary generation.
+
+
+

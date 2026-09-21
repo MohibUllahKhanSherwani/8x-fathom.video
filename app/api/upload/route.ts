@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateGeminiContentWithRetry, getGeminiApiKeys } from "@/lib/gemini";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const apiKey = process.env.GEMINI_API_KEY;
 const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 export async function POST(req: NextRequest) {
@@ -72,11 +72,9 @@ export async function POST(req: NextRequest) {
     };
 
     // If Gemini API Key is configured, run real multimodal transcription & summary
-    if (apiKey) {
+    const keys = getGeminiApiKeys();
+    if (keys.length > 0) {
       try {
-        const { GoogleGenAI } = await import("@google/genai");
-        const ai = new GoogleGenAI({ apiKey });
-
         const prompt = `You are Fathom AI, an intelligent meeting notetaker.
 Analyze the attached audio/video recording of this meeting call titled "${title}".
 Perform 3 tasks:
@@ -103,8 +101,7 @@ You MUST return a strictly valid JSON object (and nothing else, no markdown code
   }
 }`;
 
-        const response = await ai.models.generateContent({
-          model: modelName,
+        const { text: rawResponseText } = await generateGeminiContentWithRetry({
           contents: [
             {
               role: "user",
@@ -121,7 +118,7 @@ You MUST return a strictly valid JSON object (and nothing else, no markdown code
           ],
         });
 
-        let rawText = response.text || "{}";
+        let rawText = rawResponseText || "{}";
         rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
 
         const parsed = JSON.parse(rawText);

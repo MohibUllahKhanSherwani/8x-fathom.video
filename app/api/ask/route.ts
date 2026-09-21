@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as chrono from "chrono-node";
 import { SEED_MEETINGS, Meeting } from "@/lib/seed-meetings";
+import { generateGeminiContentWithRetry, getGeminiApiKeys } from "@/lib/gemini";
 
 interface AskRequestBody {
   query: string;
@@ -24,8 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
-    // Check if user has provided GEMINI_API_KEY
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Check if user has provided any GEMINI_API_KEY
+    const keys = getGeminiApiKeys();
 
     // Single-meeting or account-level target meetings
     let targetMeetings: Meeting[] = [];
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Require GEMINI_API_KEY for live AI responses (Fail Loudly)
-    if (!apiKey) {
+    if (keys.length === 0) {
       return NextResponse.json(
         {
           error: "GEMINI_API_KEY is missing from environment. Live AI responses require a valid Gemini API key.",
@@ -52,10 +53,6 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey });
-    const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -120,12 +117,9 @@ ${context}
 
 User Question: ${query}`;
 
-    const response = await ai.models.generateContent({
-      model: modelName,
+    const { text } = await generateGeminiContentWithRetry({
       contents: prompt,
     });
-
-    const text = response.text || "No response generated from Gemini.";
 
     return NextResponse.json({
       text,

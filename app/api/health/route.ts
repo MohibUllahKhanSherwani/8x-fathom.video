@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateGeminiContentWithRetry, getGeminiApiKeys } from "@/lib/gemini";
 
 export async function GET() {
   const issues: string[] = [];
 
   // 1. Check Gemini
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const keys = getGeminiApiKeys();
   let geminiStatus = "not_configured";
-  if (!geminiKey) {
+  if (keys.length === 0) {
     issues.push("GEMINI_API_KEY is missing from environment");
   } else {
     try {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: geminiKey });
-      const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
-      const res = await ai.models.generateContent({
-        model,
+      const res = await generateGeminiContentWithRetry({
         contents: "ping",
       });
       if (res.text) {
-        geminiStatus = `connected (${model})`;
+        geminiStatus = `connected (${keys.length} keys configured, active key #${res.usedKeyIndex + 1})`;
       } else {
         issues.push("Gemini returned empty response");
       }

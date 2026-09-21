@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateGeminiContentWithRetry, getGeminiApiKeys } from "@/lib/gemini";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const apiKey = process.env.GEMINI_API_KEY;
 const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 export async function POST(req: NextRequest) {
@@ -32,8 +32,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ summary: existingSummary.content, cached: true });
     }
 
-    // 2. If not cached, verify Gemini API key
-    if (!apiKey) {
+    // 2. If not cached, verify Gemini API keys
+    const keys = getGeminiApiKeys();
+    if (keys.length === 0) {
       return NextResponse.json(
         { error: "GEMINI_API_KEY missing from environment. Real AI summary requires Gemini API key." },
         { status: 500 }
@@ -86,15 +87,11 @@ You MUST return a strictly valid JSON object (and nothing else, no markdown code
   ]
 }`;
 
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey });
-
-    const response = await ai.models.generateContent({
-      model: modelName,
+    const { text: rawResponseText } = await generateGeminiContentWithRetry({
       contents: prompt,
     });
 
-    let rawText = response.text || "{}";
+    let rawText = rawResponseText || "{}";
     rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
 
     let summaryContent;
