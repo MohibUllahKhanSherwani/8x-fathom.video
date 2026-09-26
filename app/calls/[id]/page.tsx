@@ -671,7 +671,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
           {/* MODE 1: EXECUTIVE BRIEFING MODE */}
           {viewMode === "briefing" && (
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-              {/* Left: Summary View & Live Gemini Synthesis */}
+              {/* Left: Summary View & Live Synthesis */}
               <div className="flex-1 overflow-y-auto border-r border-white/6 bg-[#090a0f]">
                 <SummaryView
                   summaryMap={meeting.summary}

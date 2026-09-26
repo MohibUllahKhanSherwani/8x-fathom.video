@@ -69,17 +69,17 @@ export function generateStarMeetingTranscript(): Utterance[] {
 
   // Topic 6: Customer Escalations & Analytics Blockers (45:00 - 55:00)
   utterances.push(
-    { speaker: "Hannah Weiss", text: "We have an escalation from Acme Corp. Their legal team requires SOC 2 Type II compliance reports before expanding from 20 to 500 seats." },
+    { speaker: "Hannah Weiss", text: "We have an escalation from Ramp Enterprise. Their legal team requires SOC 2 Type II compliance reports before expanding from 20 to 500 seats." },
     { speaker: "Daniel Okafor", text: "Our audit completes next week. The final SOC 2 report will be delivered by October 15th." },
-    { speaker: "Tom Becker", text: "On data: our warehouse connector has a 15-minute sync delay. For real-time Ask Fathom citations, we need to read directly from Postgres full-text search rather than querying the warehouse." },
-    { speaker: "Daniel Okafor", text: "Agreed. Postgres FTS with GIN indexes on tsvector will give sub-50ms search across meeting segments." }
+    { speaker: "Tom Becker", text: "On data: our warehouse connector has a 15-minute sync delay. For real-time Ask Fathom citations, we need to read directly from our search index pipeline rather than querying the warehouse." },
+    { speaker: "Daniel Okafor", text: "Agreed. The direct search index pipeline will give sub-50ms search latency across meeting segments." }
   );
 
   // Topic 7: Offsite Tangent & Wrap-up / Action Items (55:00 - 60:00)
   utterances.push(
     { speaker: "Carlos Ramirez", text: "Before we do action items—are we still doing the team offsite in Lake Tahoe next month?" },
     { speaker: "Priya Nair", text: "Haha, yes Carlos! Lake Tahoe is booked for October 24th to 26th. Cabins are confirmed." },
-    { speaker: "Alex Rivera", text: "Alright, let's wrap up and confirm action items: 1) Carlos to finalize pricing tiers by Friday; 2) Aisha to push launch PR to Nov 18; 3) Daniel to deliver SOC 2 report to Acme by Oct 15; 4) Mei to finalize self-serve onboarding mocks by Wednesday; 5) Tom to deploy Postgres FTS indexes by tomorrow." },
+    { speaker: "Alex Rivera", text: "Alright, let's wrap up and confirm action items: 1) Carlos to finalize pricing tiers by Friday; 2) Aisha to push launch PR to Nov 18; 3) Daniel to deliver SOC 2 report to Ramp Enterprise by Oct 15; 4) Mei to finalize self-serve onboarding mocks by Wednesday; 5) Tom to complete the search indexing performance upgrade by tomorrow." },
     { speaker: "Priya Nair", text: "I'll compile the summary and share it in Fathom. Thanks everyone!" },
     { speaker: "Daniel Okafor", text: "Thanks all." }
   );

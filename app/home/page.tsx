@@ -27,7 +27,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch meetings dynamically from Supabase database
+  // Fetch meetings dynamically from database
   useEffect(() => {
     let isCancelled = false;
     async function loadMeetings() {
@@ -96,7 +96,7 @@ export default function HomePage() {
       const t = m.title.toLowerCase();
       if (selectedCategory === "executive") return t.includes("q4") || t.includes("roadmap") || t.includes("qbr");
       if (selectedCategory === "engineering") return t.includes("engineering") || t.includes("standup") || t.includes("escalation");
-      if (selectedCategory === "sales") return t.includes("discovery") || t.includes("northwind") || t.includes("launch");
+      if (selectedCategory === "sales") return t.includes("discovery") || t.includes("flexport") || t.includes("ramp") || t.includes("launch");
       if (selectedCategory === "1on1") return t.includes("1:1") || t.includes("interview");
       return true;
     });
@@ -129,7 +129,7 @@ export default function HomePage() {
                   <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
                     <span>Meeting Intelligence Hub</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-normal">
-                      Postgres FTS + Gemini
+                      ENTERPRISE INTELLIGENCE
                     </span>
                   </h1>
                   <p className="text-xs text-slate-400 mt-1">
@@ -212,7 +212,7 @@ export default function HomePage() {
                     100% <span className="text-xs font-normal text-slate-300">Live</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Gemini 3.6 Flash Active
+                    Multi-Model Neural Pipeline
                   </p>
                 </div>
               </div>
@@ -242,7 +242,7 @@ export default function HomePage() {
             {loading ? (
               <div className="py-24 flex flex-col items-center justify-center gap-3 text-xs text-slate-400">
                 <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-                <span>Querying Supabase database...</span>
+                <span>Loading meeting records...</span>
               </div>
             ) : error ? (
               <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">

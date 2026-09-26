@@ -97,7 +97,7 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
           <div>
             <span className="text-white font-bold text-xs tracking-tight">Ask Fathom</span>
             <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Live AI
+              Copilot
             </span>
           </div>
         </div>
@@ -165,7 +165,7 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
         {isLoading && (
           <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-[#141926] border border-white/6 text-slate-400 text-xs w-fit">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-            <span>Analyzing meeting transcripts with Gemini...</span>
+            <span>Synthesizing across meeting transcripts...</span>
           </div>
         )}
       </div>
@@ -217,7 +217,7 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
           </button>
         </form>
         <p className="text-[10px] text-slate-400 text-center mt-2">
-          Powered by Gemini 3.6 Flash & Postgres Full-Text Search
+          Enterprise Workspace Intelligence
         </p>
       </div>
     </aside>

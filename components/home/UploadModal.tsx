@@ -108,7 +108,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
             </div>
             <div>
               <h2 className="text-base font-bold text-white">Upload Meeting Recording</h2>
-              <p className="text-[11px] text-slate-400">Direct pipeline to Gemini AI & Postgres Full-Text Search</p>
+              <p className="text-[11px] text-slate-400">High-fidelity audio transcription & executive intelligence</p>
             </div>
           </div>
 
@@ -200,7 +200,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                 className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Process with Gemini AI</span>
+                <span>Process Recording</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -241,7 +241,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               </div>
               <div className={`p-2.5 rounded-xl border ${step === "summarizing" ? "bg-indigo-600/10 border-indigo-500/30 text-indigo-300" : progress === 100 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/2 border-white/5"}`}>
                 <span className="font-bold block">3. Synthesis</span>
-                <span>Gemini 3.6 Flash</span>
+                <span>Executive Intelligence</span>
               </div>
             </div>
 

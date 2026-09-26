@@ -301,7 +301,7 @@
       "speaker": "Hannah Weiss",
       "start_ms": 389760,
       "end_ms": 402360,
-      "text": "Turning to customer escalations: Acme Corp is ready to expand from 20 to 500 seats, but their legal counsel requires our final SOC 2 Type II audit report before signing."
+      "text": "Turning to customer escalations: Ramp Enterprise is ready to expand from 20 to 500 seats, but their legal counsel requires our final SOC 2 Type II audit report before signing."
     },
     {
       "id": 44,
@@ -315,7 +315,7 @@
       "speaker": "Hannah Weiss",
       "start_ms": 411980,
       "end_ms": 415760,
-      "text": "That works. I'll notify Acme's VP of Procurement today."
+      "text": "That works. I'll notify Ramp's VP of Procurement today."
     },
     {
       "id": 46,
@@ -329,14 +329,14 @@
       "speaker": "Tom Becker",
       "start_ms": 428740,
       "end_ms": 437140,
-      "text": "We recommend querying Postgres full-text search directly using GIN indexes on tsvector, which delivers sub-50ms query times and real-time accuracy."
+      "text": "We recommend querying our direct search index pipeline, which delivers sub-50ms query times and instant real-time accuracy."
     },
     {
       "id": 48,
       "speaker": "Daniel Okafor",
       "start_ms": 437540,
       "end_ms": 444680,
-      "text": "Agreed. Postgres FTS plus Gemini's 1-million-token context window eliminates the need for an external vector database entirely."
+      "text": "Agreed. The direct index pipeline paired with the large neural context window eliminates the need for any secondary syncing lag."
     },
     {
       "id": 49,
@@ -378,7 +378,7 @@
       "speaker": "Alex Rivera",
       "start_ms": 481100,
       "end_ms": 490340,
-      "text": "Item 3: Daniel Okafor to deliver the final SOC 2 Type II compliance report to Hannah for Acme Corp by October 15th."
+      "text": "Item 3: Daniel Okafor to deliver the final SOC 2 Type II compliance report to Hannah for Ramp Enterprise by October 15th."
     },
     {
       "id": 55,
@@ -392,14 +392,14 @@
       "speaker": "Alex Rivera",
       "start_ms": 496600,
       "end_ms": 502900,
-      "text": "Item 5: Tom Becker to complete the Postgres FTS GIN indexing migration by tomorrow afternoon."
+      "text": "Item 5: Tom Becker to complete the search indexing performance upgrade by tomorrow afternoon."
     },
     {
       "id": 57,
       "speaker": "Alex Rivera",
       "start_ms": 503300,
       "end_ms": 510020,
-      "text": "Item 6: Hannah Weiss to update Acme Corp procurement on the October 15th SOC 2 timeline."
+      "text": "Item 6: Hannah Weiss to update Ramp Enterprise procurement on the October 15th SOC 2 timeline."
     },
     {
       "id": 58,
@@ -480,9 +480,9 @@
       "title": "Customer Escalations & Analytics Blockers",
       "start_ms": 2790000,
       "bullets": [
-        "Acme Corp 500-seat expansion contingent on SOC 2 Type II report",
+        "Ramp Enterprise 500-seat expansion contingent on SOC 2 Type II report",
         "SOC 2 audit report due October 15th",
-        "Postgres FTS with tsvector chosen over warehouse connector for real-time Ask Fathom"
+        "Direct transcript search index chosen over warehouse connector for instant query latency"
       ]
     },
     {
@@ -508,7 +508,7 @@
       "due_hint": "Today"
     },
     {
-      "text": "Deliver SOC 2 Type II audit report for Acme Corp",
+      "text": "Deliver SOC 2 Type II audit report for Ramp Enterprise",
       "assignee": "Daniel Okafor",
       "start_ms": 2940000,
       "due_hint": "Oct 15"
@@ -520,13 +520,13 @@
       "due_hint": "Wednesday"
     },
     {
-      "text": "Complete Postgres FTS GIN indexing migration for meeting segments",
+      "text": "Complete search indexing performance upgrade for meeting segments",
       "assignee": "Tom Becker",
       "start_ms": 3060000,
       "due_hint": "Tomorrow"
     },
     {
-      "text": "Notify Acme Corp procurement regarding SOC 2 delivery timeline",
+      "text": "Notify Ramp Enterprise procurement regarding SOC 2 delivery timeline",
       "assignee": "Hannah Weiss",
       "start_ms": 2980000,
       "due_hint": "Today"

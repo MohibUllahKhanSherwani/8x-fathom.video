@@ -372,7 +372,7 @@ export default function OnboardingPage() {
                   {captureMode === "webrtc" && <Check className="w-4 h-4 text-[#00b2ea]" />}
                 </div>
                 <p className="text-[11px] text-[#9a9ba1] mt-1">
-                  Speak into your mic and let Gemini transcribe your real voice and generate a live summary.
+                  Speak into your mic to test voice transcription and automated summary generation.
                 </p>
               </div>
 
@@ -648,7 +648,7 @@ export default function OnboardingPage() {
                       Processing meeting recording...
                     </h3>
                     <p className="text-xs text-[#9a9ba1]">
-                      Transcribing with Gemini &amp; synthesizing summary
+                      Transcribing audio &amp; synthesizing executive summary
                     </p>
                   </div>
 
@@ -685,7 +685,7 @@ export default function OnboardingPage() {
                         <span className="w-4 h-4 text-[#4b5160] flex items-center justify-center">○</span>
                       )}
                       <span className={processingStep >= 3 ? "text-white" : "text-[#9a9ba1]"}>
-                        Synthesizing AI summary with Gemini
+                        Synthesizing executive summary
                       </span>
                     </div>
                   </div>

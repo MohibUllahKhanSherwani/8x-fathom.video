@@ -48,7 +48,7 @@ export function TopBar({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // Debounced search to /api/search (PostgreSQL Full-Text Search on Supabase)
+  // Debounced search to /api/search endpoint
   useEffect(() => {
     if (!query.trim()) return;
 
@@ -421,7 +421,7 @@ export function TopBar({
               <span>Fathom Help & Shortcuts</span>
             </div>
             <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Fathom AI is your high-velocity executive meeting intelligence platform with sub-100ms transcript sync and live Gemini synthesis.
+              Fathom AI is your high-velocity executive meeting intelligence platform with synchronized audio playback, automated summaries, and instant quote clipping.
             </p>
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/3 border border-white/5">

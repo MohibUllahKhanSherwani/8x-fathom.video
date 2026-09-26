@@ -29,7 +29,7 @@ export default function PublicSharePage({ params }: SharePageProps) {
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
 
-  // Fetch meeting from Supabase database
+  // Fetch meeting from database
   useEffect(() => {
     let isCancelled = false;
     async function loadShareMeeting() {

@@ -97,12 +97,12 @@ export function buildQ4RoadmapMeeting() {
   addUtterance("Carlos Ramirez", "Beta teams will be grandfathered on Pro free for 90 days, followed by a 20% discount on annual commitments.");
 
   // Topic 6: Customer Escalations & Analytics Blockers (46:30 - 54:00)
-  addUtterance("Hannah Weiss", "Turning to customer escalations: Acme Corp is ready to expand from 20 to 500 seats, but their legal counsel requires our final SOC 2 Type II audit report before signing.");
+  addUtterance("Hannah Weiss", "Turning to customer escalations: Ramp Enterprise is ready to expand from 20 to 500 seats, but their legal counsel requires our final SOC 2 Type II audit report before signing.");
   addUtterance("Daniel Okafor", "Our external SOC 2 audit concludes next week. The official SOC 2 Type II report will be delivered by October 15th.");
-  addUtterance("Hannah Weiss", "That works. I'll notify Acme's VP of Procurement today.");
+  addUtterance("Hannah Weiss", "That works. I'll notify Ramp's VP of Procurement today.");
   addUtterance("Tom Becker", "On analytics and data: our warehouse connector has a 15-minute sync delay. If users use Ask Fathom on home to search recent calls, the warehouse will miss today's meetings.");
-  addUtterance("Tom Becker", "We recommend querying Postgres full-text search directly using GIN indexes on tsvector, which delivers sub-50ms query times and real-time accuracy.");
-  addUtterance("Daniel Okafor", "Agreed. Postgres FTS plus Gemini's 1-million-token context window eliminates the need for an external vector database entirely.");
+  addUtterance("Tom Becker", "We recommend querying our direct search index pipeline, which delivers sub-50ms query times and instant real-time accuracy.");
+  addUtterance("Daniel Okafor", "Agreed. The direct index pipeline paired with the large neural context window eliminates the need for any secondary syncing lag.");
 
   // Topic 7: Offsite Tangent & Wrap-up / Action Items (54:00 - 60:00)
   addUtterance("Carlos Ramirez", "Before we review action items—are we still confirmed for the team offsite in Lake Tahoe next month?");
@@ -110,10 +110,10 @@ export function buildQ4RoadmapMeeting() {
   addUtterance("Alex Rivera", "Awesome. Let's do a strict recap of action items and commitments:");
   addUtterance("Alex Rivera", "Item 1: Carlos Ramirez to finalize the pricing sheet and discount approval matrix by Friday at 5 PM.");
   addUtterance("Alex Rivera", "Item 2: Aisha Khan to reschedule the podcast sponsorships and press embargo for the November 18th launch.");
-  addUtterance("Alex Rivera", "Item 3: Daniel Okafor to deliver the final SOC 2 Type II compliance report to Hannah for Acme Corp by October 15th.");
+  addUtterance("Alex Rivera", "Item 3: Daniel Okafor to deliver the final SOC 2 Type II compliance report to Hannah for Ramp Enterprise by October 15th.");
   addUtterance("Alex Rivera", "Item 4: Mei Lin to finalize the self-serve onboarding Figma prototypes by Wednesday.");
-  addUtterance("Alex Rivera", "Item 5: Tom Becker to complete the Postgres FTS GIN indexing migration by tomorrow afternoon.");
-  addUtterance("Alex Rivera", "Item 6: Hannah Weiss to update Acme Corp procurement on the October 15th SOC 2 timeline.");
+  addUtterance("Alex Rivera", "Item 5: Tom Becker to complete the search indexing performance upgrade by tomorrow afternoon.");
+  addUtterance("Alex Rivera", "Item 6: Hannah Weiss to update Ramp Enterprise procurement on the October 15th SOC 2 timeline.");
   addUtterance("Priya Nair", "I will compile this meeting's summary in Fathom and share the link with the executive team. Great meeting everyone!");
   addUtterance("Daniel Okafor", "Thanks all, see you at standup.");
   addUtterance("Hannah Weiss", "Thanks team!");
@@ -129,16 +129,16 @@ export function buildQ4RoadmapMeeting() {
       { title: "Q4 Priority 1: Self-Serve Onboarding", start_ms: 840000, bullets: ["Target zero-touch setup under 2 minutes", "Three-step onboarding modal flow with 60-second test call", "25 points on signup plus 5 points for test call completion"] },
       { title: "Launch Date Debate (Nov 4 vs Nov 18)", start_ms: 1470000, bullets: ["Nov 4 proposed by marketing for SaaS Summit", "Daniel pushed back due to staging test and database migration risks", "Decision: Official launch set for November 18th"] },
       { title: "Pricing & Packaging Restructure", start_ms: 2160000, bullets: ["Free tier remains unlimited for individual users", "Pro tier introduced at $19/user/mo with CRM sync & Ask Fathom", "Carlos Ramirez owns final pricing decision by Friday 5 PM", "Beta teams grandfathered free for 90 days"] },
-      { title: "Customer Escalations & Analytics Blockers", start_ms: 2790000, bullets: ["Acme Corp 500-seat expansion contingent on SOC 2 Type II report", "SOC 2 audit report due October 15th", "Postgres FTS with tsvector chosen over warehouse connector for real-time Ask Fathom"] },
+      { title: "Customer Escalations & Analytics Blockers", start_ms: 2790000, bullets: ["Ramp Enterprise 500-seat expansion contingent on SOC 2 Type II report", "SOC 2 audit report due October 15th", "Direct transcript search index chosen over warehouse connector for instant query latency"] },
       { title: "Offsite Tangent & Wrap-up / Action Items", start_ms: 3240000, bullets: ["Team offsite confirmed in Lake Tahoe (Oct 24-26)", "6 explicit action items confirmed with named owners"] }
     ],
     action_items: [
       { text: "Finalize pricing sheet and discount approval matrix", assignee: "Carlos Ramirez", start_ms: 2520000, due_hint: "Friday 5 PM" },
       { text: "Reschedule podcast sponsorships and press embargo for Nov 18 launch", assignee: "Aisha Khan", start_ms: 2100000, due_hint: "Today" },
-      { text: "Deliver SOC 2 Type II audit report for Acme Corp", assignee: "Daniel Okafor", start_ms: 2940000, due_hint: "Oct 15" },
+      { text: "Deliver SOC 2 Type II audit report for Ramp Enterprise", assignee: "Daniel Okafor", start_ms: 2940000, due_hint: "Oct 15" },
       { text: "Finalize self-serve onboarding Figma prototypes", assignee: "Mei Lin", start_ms: 1080000, due_hint: "Wednesday" },
-      { text: "Complete Postgres FTS GIN indexing migration for meeting segments", assignee: "Tom Becker", start_ms: 3060000, due_hint: "Tomorrow" },
-      { text: "Notify Acme Corp procurement regarding SOC 2 delivery timeline", assignee: "Hannah Weiss", start_ms: 2980000, due_hint: "Today" },
+      { text: "Complete search indexing performance upgrade for meeting segments", assignee: "Tom Becker", start_ms: 3060000, due_hint: "Tomorrow" },
+      { text: "Notify Ramp Enterprise procurement regarding SOC 2 delivery timeline", assignee: "Hannah Weiss", start_ms: 2980000, due_hint: "Today" },
       { text: "Compile meeting summary in Fathom and share with executive team", assignee: "Priya Nair", start_ms: 3540000, due_hint: "Today" }
     ]
   };

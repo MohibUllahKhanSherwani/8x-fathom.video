@@ -39,9 +39,9 @@
       }
     },
     {
-      "id": "m2-northwind",
-      "slug": "discovery-northwind-logistics",
-      "title": "Discovery Call: Northwind Logistics",
+      "id": "m2-flexport",
+      "slug": "discovery-flexport-logistics",
+      "title": "Discovery Call: Flexport Logistics",
       "owner": "Alex Rivera",
       "visibility": "private",
       "duration_sec": 1680,
@@ -51,7 +51,7 @@
       "participants": [
         { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
         { "name": "Carlos Ramirez", "color": "#f97316" },
-        { "name": "Sarah Jenkins", "is_external": true, "role": "VP Ops at Northwind", "color": "#6366f1" }
+        { "name": "Sarah Jenkins", "is_external": true, "role": "VP Global Ops at Flexport", "color": "#6366f1" }
       ]
     },
     {
@@ -74,9 +74,9 @@
       ]
     },
     {
-      "id": "m4-acme-qbr",
-      "slug": "acme-corp-qbr",
-      "title": "Acme Corp QBR",
+      "id": "m4-ramp-qbr",
+      "slug": "ramp-enterprise-qbr",
+      "title": "Ramp Enterprise QBR",
       "owner": "Alex Rivera",
       "visibility": "private",
       "duration_sec": 2100,
@@ -86,8 +86,8 @@
       "participants": [
         { "name": "Alex Rivera", "is_host": true, "color": "#00b2ea" },
         { "name": "Hannah Weiss", "color": "#10b981" },
-        { "name": "Mark Vance", "is_external": true, "role": "CTO at Acme", "color": "#ef4444" },
-        { "name": "Elena Rostova", "is_external": true, "role": "Product Lead at Acme", "color": "#8b5cf6" }
+        { "name": "Mark Vance", "is_external": true, "role": "CTO at Ramp", "color": "#ef4444" },
+        { "name": "Elena Rostova", "is_external": true, "role": "Product Lead at Ramp", "color": "#8b5cf6" }
       ]
     },
     {

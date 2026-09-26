@@ -46,7 +46,7 @@ export function AskFathomView({ meetingId, onSeek }: AskFathomViewProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to query Gemini AI");
+        throw new Error(data.error || "Failed to query Fathom AI");
       }
 
       setMessages((prev) => [
@@ -58,7 +58,7 @@ export function AskFathomView({ meetingId, onSeek }: AskFathomViewProps) {
         },
       ]);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error querying Gemini AI";
+      const msg = err instanceof Error ? err.message : "Error querying Fathom AI";
       setMessages((prev) => [
         ...prev,
         {
@@ -151,7 +151,7 @@ export function AskFathomView({ meetingId, onSeek }: AskFathomViewProps) {
             {isTyping && (
               <div className="flex items-center gap-2 text-xs text-indigo-300">
                 <Sparkles className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                <span>Gemini is generating response from transcript...</span>
+                <span>Synthesizing answer from transcript...</span>
               </div>
             )}
 

@@ -100,3 +100,25 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 
 
 
+
+---
+
+### Phase 11: Enterprise Data Realism & Internal Leaks Removal
+- **Context**: The user emphasized removing all internal infrastructure terminology (Gemini Flash, Postgres FTS, Live AI, Supabase) and standard placeholder names (Acme Corp, Northwind Logistics) from the application UI, dialogues, and datasets.
+- **Architectural & Design Choices**:
+  1. **Purging Developer Stack Jargon from UI**:
+     - Modern enterprise SaaS products present capabilities as integrated product features rather than exposing raw infrastructure libraries.
+     - Replaced badges like 'Postgres FTS + Gemini' with 'ENTERPRISE INTELLIGENCE'.
+     - Replaced model callouts with 'Multi-Model Neural Pipeline'.
+     - Replaced 'Live AI' badges with 'Copilot'.
+     - Replaced 'Fix with Gemini AI' with 'Auto-Correct Fact' and 'Verifying with transcript...'.
+  2. **Elevating to Realistic Enterprise Brands**:
+     - Standard generic names ('Acme Corp', 'Northwind Logistics') erode immersion and make products look like cookie-cutter demos.
+     - Replaced 'Acme Corp' with Ramp Enterprise (leading fintech unicorn with a realistic 500-seat expansion narrative).
+     - Replaced 'Northwind Logistics' with Flexport Logistics (global freight forwarding tech giant with 4,000 weekly calls across Zoom/Teams).
+  3. **Cleaning Spoken Transcript Dialogues**:
+     - The 60-minute executive planning call transcript previously contained engineers debating database implementation details ('Postgres FTS GIN indexing on tsvector', 'Gemini 1-million-token window').
+     - Refactored all spoken dialogue and action items to reflect authentic software leadership: direct search indexing pipelines, sub-50ms query latency, and neural context window efficiency.
+  4. **Database Reseed & Verification**:
+     - Reseeded Supabase PostgreSQL database cleanly using scripts/seed_supabase.ts.
+     - Verified /api/search Full-Text Search returns instant, timestamped citations for 'Ramp' and 'Flexport', with zero matches for legacy placeholders.

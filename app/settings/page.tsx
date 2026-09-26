@@ -428,7 +428,7 @@ export default function SettingsPage() {
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Automatically extracts assigned action items, due dates, and owners directly to Supabase.
+                    Automatically extracts assigned action items, due dates, and owners directly from your meetings.
                   </p>
                 </div>
               </div>
@@ -484,7 +484,7 @@ export default function SettingsPage() {
         <div className="p-4 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Database synchronized with Supabase project 8x-fathom.video</span>
+            <span>Workspace storage synchronized and encrypted</span>
           </div>
           <span className="font-mono text-[11px] text-slate-500">v2.4.0-bespoke</span>
         </div>

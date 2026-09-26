@@ -70,3 +70,24 @@ Rebuild the frontend with our own original layout and visual design, keeping our
   - "Verify Source" (`🔍`) jump button to trace each AI summary point directly to transcript evidence.
 - [x] **10.5: QA, TypeScript & Build Pass**
   - Validate TypeScript (`npx tsc --noEmit`), build (`npm run build`), test in browser, and commit alongside `.agent-logs/`.
+
+---
+
+## Phase 11: Purge Internal Leaks & Standardize Realistic Enterprise Data
+- [x] **11.1: Purge All Developer/Stack Leaks from User-Facing UI**
+  - Removed all exposed badges and labels mentioning internal technologies: "Postgres FTS + Gemini" -> "ENTERPRISE INTELLIGENCE", "Gemini 3.6 Flash Active" -> "Multi-Model Neural Pipeline", "Live AI" -> "Copilot", "Querying Supabase database..." -> "Loading meeting records...".
+  - Cleaned all modals, settings, onboarding, and call pages of internal tool names ("Fix with Gemini" -> "Auto-Correct Fact", "Verifying with Gemini" -> "Verifying with transcript", etc.).
+- [x] **11.2: Replace Cliché Demo Names with Prestigious Enterprise Brands**
+  - Replaced standard placeholders "Acme Corp" / "Acme" with authentic fintech leader **Ramp Enterprise** / **Ramp**.
+  - Replaced "Northwind Logistics" / "Northwind" with premier supply chain leader **Flexport Logistics** / **Flexport**.
+  - Updated participant roles, meeting slugs, and call descriptions across all datasets and outlines.
+- [x] **11.3: Clean Spoken Transcript Dialogues of Internal Architecture Jargon**
+  - Removed internal stack trivia from 60-min meeting dialogues and action items ("Postgres FTS with tsvector", "GIN indexing", "Gemini 1-million-token window").
+  - Replaced with realistic engineering discussion: direct high-speed search index pipeline, sub-50ms query latency, and neural context window.
+- [x] **11.4: Reseed Real Supabase Database & Verify Search**
+  - Ran `npx tsx scripts/seed_supabase.ts` with 100% success across all 9 meetings, summaries, action items, and transcripts.
+  - Verified live search `/api/search`: queries for "Ramp" and "Flexport" return instant timestamped matches; queries for "Acme" and "Northwind" return 0.
+- [x] **11.5: Strict Verification & Commit**
+  - `npx tsc --noEmit` passed with 0 errors.
+  - `npm run build` passed with 0 errors.
+  - Excluded `ONE_MINUTE_VIDEO_SCRIPT.md` from git.

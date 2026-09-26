@@ -123,7 +123,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
     };
   }, [selectedTemplate, selectedLanguage, meetingId, mergedMap, onUpdateSummary]);
 
-  // Persist updated summary to state and Supabase
+  // Persist updated summary to state and backend
   const persistSummaryUpdate = async (updated: SummaryContent, successMsg: string) => {
     setGeneratedSummaries((prev) => ({ ...prev, [selectedTemplate]: updated }));
     onUpdateSummary?.(selectedTemplate, updated);
@@ -175,7 +175,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
     setEditingTarget(null);
   };
 
-  // Handle AI Fact-Correction with Gemini
+  // Handle AI Fact-Correction
   const handleFixWithAI = async () => {
     if (!flagTarget || !currentSummary || !meetingId || !userCorrectionText.trim()) return;
 
@@ -220,7 +220,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
         }
       }
 
-      await persistSummaryUpdate(updated, "✨ Corrected by Gemini AI against transcript");
+      await persistSummaryUpdate(updated, "✨ Corrected against meeting transcript");
       setFlagTarget(null);
       setUserCorrectionText("");
     } catch (err: unknown) {
@@ -360,7 +360,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
               <AlertCircle className="w-4 h-4" />
-              <span>Flag Inaccurate Fact & Fix with Gemini AI</span>
+              <span>Flag Inaccurate Fact & Auto-Correct</span>
             </div>
             <button
               onClick={() => setFlagTarget(null)}
@@ -409,12 +409,12 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
               {isFixingWithAI ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>Verifying with Gemini...</span>
+                  <span>Verifying with transcript...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3 h-3" />
-                  <span>Fix with Gemini</span>
+                  <span>Auto-Correct Fact</span>
                 </>
               )}
             </button>
@@ -426,7 +426,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
       {isGenerating && (
         <div className="p-8 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex flex-col items-center justify-center gap-2.5 text-indigo-300 text-xs">
           <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-          <span className="font-semibold">Synthesizing {selectedTemplate} summary with Gemini...</span>
+          <span className="font-semibold">Synthesizing {selectedTemplate} summary...</span>
           <span className="text-[11px] text-slate-400">Transcribing and extracting strategic decision points</span>
         </div>
       )}
