@@ -10,6 +10,7 @@ export interface Participant {
 
 export interface Segment {
   id: number;
+  idx?: number;
   speaker: string;
   start_ms: number;
   end_ms: number;
@@ -53,6 +54,7 @@ export interface Meeting {
   is_star?: boolean;
   audio_url?: string;
   thumbnail_url?: string;
+  share_token?: string;
   participants: Participant[];
   summary: Record<string, SummaryContent>;
   action_items: ActionItem[];

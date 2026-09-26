@@ -1,22 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --bg-page: #111214;
-  --bg-canvas: #161719;
-  --bg-black: #000000;
-  --surface-card: #1e2024;
-  --surface-card-hover: #26292f;
-  --surface-input: #1e2024;
-  --border-subtle: #26282d;
-  --border-default: #32353c;
-  --text-primary: #ffffff;
-  --text-secondary: #d1d5db;
-  --text-muted: #9a9ba1;
-  --accent-cyan: #00b2ea;
-  --accent-cyan-hover: #00c5ff;
-  --gold: #e8b923;
-  --success: #3dbb6b;
-  --danger: #ff4d4f;
+  /* Bespoke Executive Design Tokens */
+  --bg-page: #090a0f;
+  --bg-surface: #0f121a;
+  --bg-card: #131722;
+  --bg-card-hover: #191f2e;
+  --bg-glass: rgba(19, 23, 34, 0.72);
+  --bg-glass-elevated: rgba(25, 31, 46, 0.85);
+
+  --border-glass: rgba(255, 255, 255, 0.07);
+  --border-subtle: #1c2230;
+  --border-default: #262e42;
+  --border-active: #4f46e5;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #818cf8;
+  --accent-secondary: #06b6d4;
+  --accent-secondary-hover: #38bdf8;
+  --accent-success: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
 }
 
 body {
@@ -24,6 +33,37 @@ body {
   color: var(--text-primary);
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism primitives */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Modern subtle glow */
+.glow-primary {
+  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px -4px rgba(16, 185, 129, 0.3);
 }
 
 /* Custom Scrollbars */
@@ -33,14 +73,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #111214;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2a2c32;
+  background: #262e42;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3d45;
+  background: #3b4663;
 }

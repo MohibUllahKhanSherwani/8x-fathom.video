@@ -8,6 +8,8 @@ import {
   Volume2,
   VolumeX,
   Maximize2,
+  RotateCcw,
+  RotateCw,
 } from "lucide-react";
 import { Meeting } from "@/lib/seed-meetings";
 
@@ -21,6 +23,7 @@ interface VideoPlayerProps {
   playbackRate: number;
   onPlaybackRateChange: (rate: number) => void;
   activeSpeakerName: string | null;
+  highlights?: Array<{ start_ms: number; end_ms?: number }>;
 }
 
 export function VideoPlayer({
@@ -33,6 +36,7 @@ export function VideoPlayer({
   playbackRate,
   onPlaybackRateChange,
   activeSpeakerName,
+  highlights = [],
 }: VideoPlayerProps) {
   const [isMuted, setIsMuted] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -62,6 +66,11 @@ export function VideoPlayer({
     onPlaybackRateChange(nextSpeed);
   };
 
+  const skipSeconds = (sec: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSeek(currentTimeMs + sec * 1000);
+  };
+
   const toggleFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!playerRef.current) return;
@@ -76,9 +85,9 @@ export function VideoPlayer({
     <div
       ref={playerRef}
       onClick={onPlayPause}
-      className="relative aspect-video w-full bg-black overflow-hidden group cursor-pointer select-none"
+      className="relative aspect-video w-full bg-[#080b11] overflow-hidden group cursor-pointer select-none border-b border-white/6"
     >
-      {/* Video Frame or Poster */}
+      {/* Visual Canvas or Poster */}
       {meeting.thumbnail_url ? (
         <Image
           src={meeting.thumbnail_url}
@@ -88,54 +97,92 @@ export function VideoPlayer({
           className="object-contain"
         />
       ) : (
-        <div className="w-full h-full bg-[#161719] flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-full bg-[#1e2024] border border-[#2f3238] flex items-center justify-center mx-auto mb-2 text-[#00b2ea]">
-              <Play className="w-5 h-5 ml-0.5 fill-current" />
+        <div className="w-full h-full bg-gradient-to-tr from-[#0a0d16] via-[#101524] to-[#0a0d16] flex items-center justify-center">
+          <div className="text-center p-6 max-w-md">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-3 text-indigo-400 shadow-xl shadow-indigo-500/10">
+              <Play className="w-6 h-6 ml-0.5 fill-current" />
             </div>
-            <p className="text-xs font-semibold text-white">{meeting.title}</p>
-            <p className="text-[11px] text-[#9a9ba1]">Click to play</p>
+            <p className="text-sm font-bold text-white tracking-tight">{meeting.title}</p>
+            <p className="text-xs text-slate-400 mt-1">Click canvas or spacebar to stream recording</p>
           </div>
         </div>
       )}
 
-      {/* Play/Pause Center Indicator on Pause */}
+      {/* Center Play Indicator on Pause */}
       {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-          <div className="w-14 h-14 rounded-full bg-black/60 backdrop-blur-xs border border-white/20 flex items-center justify-center text-white shadow-2xl">
-            <Play className="w-6 h-6 ml-1 fill-white" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px] pointer-events-none transition-all">
+          <div className="w-16 h-16 rounded-full bg-indigo-600/80 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl">
+            <Play className="w-7 h-7 ml-1 fill-white" />
           </div>
         </div>
       )}
 
-      {/* Speaker Indicator Badge in Video Bottom-Left */}
-      <div className="absolute left-3 bottom-10 px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-[10px] text-white flex items-center gap-1.5 pointer-events-none shadow-sm">
-        <span className="text-[#3dbb6b] font-mono">ıll</span>
-        <span>{activeSpeakerName || meeting.participants[0]?.name || "Speaker"}</span>
+      {/* Active Speaker Pill in Video (Top-Left) */}
+      <div className="absolute left-4 top-4 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-xs text-white flex items-center gap-2 pointer-events-none shadow-lg">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="font-semibold text-slate-200">
+          {activeSpeakerName || meeting.participants?.[0]?.name || "Speaker"}
+        </span>
       </div>
 
-      {/* Bottom Controls Overlay Bar Matching Screenshot 15.png */}
+      {/* Floating Bottom Controls Overlay Bar */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-2.5 pt-6 flex flex-col gap-1.5 transition-opacity"
+        className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-[#080b11]/95 via-[#080b11]/70 to-transparent p-3 pt-8 flex flex-col gap-2 transition-opacity"
       >
-        {/* Scrubber Bar */}
+        {/* Scrubber Timeline with Speaker Segment Colors & Highlight Pins */}
         <div
           onClick={handleScrubClick}
-          className="relative w-full h-3 flex items-center cursor-pointer group/scrub"
+          className="relative w-full h-4 flex items-center cursor-pointer group/scrub"
         >
           {/* Background Bar */}
-          <div className="w-full h-1 bg-white/30 group-hover/scrub:h-1.5 rounded-full overflow-hidden transition-all">
+          <div className="w-full h-1.5 bg-white/15 group-hover/scrub:h-2 rounded-full overflow-hidden transition-all relative">
+            {/* Color-coded speaker segments if available */}
+            {meeting.segments && meeting.segments.length > 0 && durationMs > 0 && (
+              <div className="absolute inset-0 flex pointer-events-none opacity-40">
+                {meeting.segments.map((seg, sIdx) => {
+                  const segWidthPct = ((seg.end_ms - seg.start_ms) / durationMs) * 100;
+                  const segLeftPct = (seg.start_ms / durationMs) * 100;
+                  const partColor = meeting.participants?.find((p) => p.name === seg.speaker)?.color || "#6366f1";
+                  return (
+                    <div
+                      key={sIdx}
+                      style={{
+                        left: `${segLeftPct}%`,
+                        width: `${Math.max(segWidthPct, 0.2)}%`,
+                        backgroundColor: partColor,
+                      }}
+                      className="absolute top-0 bottom-0"
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Elapsed Progress Fill */}
             <div
               style={{ width: `${progressPct}%` }}
-              className="h-full bg-[#00b2ea]"
+              className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 relative z-10"
             />
           </div>
+
+          {/* Highlight Marker Pins */}
+          {highlights.map((hl, idx) => {
+            const hlPct = durationMs > 0 ? (hl.start_ms / durationMs) * 100 : 0;
+            return (
+              <div
+                key={idx}
+                style={{ left: `${hlPct}%` }}
+                title={`Highlight: ${formatTime(hl.start_ms)}`}
+                className="absolute w-2 h-2 rounded-full bg-amber-400 -translate-x-1/2 shadow-sm pointer-events-none z-20"
+              />
+            );
+          })}
 
           {/* Scrubber Handle */}
           <div
             style={{ left: `${progressPct}%` }}
-            className="absolute w-2.5 h-2.5 bg-white rounded-full -translate-x-1/2 shadow opacity-0 group-hover/scrub:opacity-100 transition-opacity pointer-events-none"
+            className="absolute w-3.5 h-3.5 bg-white rounded-full -translate-x-1/2 shadow-md opacity-0 group-hover/scrub:opacity-100 transition-opacity pointer-events-none z-30"
           />
         </div>
 
@@ -145,34 +192,50 @@ export function VideoPlayer({
             {/* Play / Pause */}
             <button
               onClick={onPlayPause}
-              className="text-white hover:text-[#00b2ea] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
             >
               {isPlaying ? (
                 <Pause className="w-4 h-4 fill-white" />
               ) : (
-                <Play className="w-4 h-4 fill-white" />
+                <Play className="w-4 h-4 fill-white ml-0.5" />
               )}
+            </button>
+
+            {/* Skip 15s Back & Forward */}
+            <button
+              onClick={(e) => skipSeconds(-15, e)}
+              className="p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Rewind 15s (J)"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => skipSeconds(15, e)}
+              className="p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Forward 15s (L)"
+            >
+              <RotateCw className="w-4 h-4" />
             </button>
 
             {/* Volume */}
             <button
               onClick={() => setIsMuted(!isMuted)}
-              className="text-white hover:text-[#00b2ea] transition-colors cursor-pointer"
+              className="p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
             >
               {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
 
-            {/* Timestamp */}
-            <span className="font-mono text-[11px] text-white">
-              {formatTime(currentTimeMs)} / {formatTime(durationMs)}
+            {/* Timestamp Counter */}
+            <span className="font-mono text-[11px] text-slate-300 ml-1">
+              {formatTime(currentTimeMs)} <span className="text-slate-500">/</span> {formatTime(durationMs)}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Speed */}
+            {/* Speed Selector */}
             <button
               onClick={cycleSpeed}
-              className="px-1.5 py-0.5 rounded bg-black/50 hover:bg-black/80 border border-white/20 font-mono text-[10px] font-semibold text-white transition-colors cursor-pointer"
+              className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 font-mono text-[11px] font-semibold text-white transition-colors cursor-pointer"
             >
               {playbackRate}x
             </button>
@@ -180,9 +243,10 @@ export function VideoPlayer({
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="text-white hover:text-[#00b2ea] transition-colors cursor-pointer"
+              className="p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Fullscreen"
             >
-              <Maximize2 className="w-3.5 h-3.5" />
+              <Maximize2 className="w-4 h-4" />
             </button>
           </div>
         </div>

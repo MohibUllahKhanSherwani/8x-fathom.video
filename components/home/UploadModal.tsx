@@ -6,10 +6,9 @@ import {
   Upload,
   X,
   FileAudio,
-  AlertCircle,
   Sparkles,
   ArrowRight,
-  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 interface UploadModalProps {
@@ -63,7 +62,6 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
       formData.append("file", file);
       formData.append("title", meetingTitle || file.name);
 
-      // Simulate realistic step transitions
       setTimeout(() => {
         setStep("transcribing");
         setProgress(50);
@@ -90,7 +88,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
       setTimeout(() => {
         onClose();
-        router.push(`/calls/${data.meetingId || "829997322"}`);
+        router.push(`/calls/${data.meetingId || "829997321"}`);
       }, 1000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error processing file";
@@ -100,133 +98,159 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
-      <div className="bg-[#161719] border border-[#26282d] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6 relative">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 select-none">
+      <div className="bg-[#121622] border border-white/10 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-white font-bold text-base">
-            <Upload className="w-5 h-5 text-[#00b2ea]" />
-            <span>Upload Meeting Recording</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <Upload className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Upload Meeting Recording</h2>
+              <p className="text-[11px] text-slate-400">Direct pipeline to Gemini AI & Postgres Full-Text Search</p>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-[#25282e] text-[#9a9ba1] hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+
+          {step === "idle" && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
-        {step === "idle" ? (
-          <div className="space-y-4">
-            {/* Title Input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white block">Meeting Title</label>
-              <input
-                type="text"
-                placeholder="e.g. Q4 Strategy Review"
-                value={meetingTitle}
-                onChange={(e) => setMeetingTitle(e.target.value)}
-                className="w-full h-10 px-3.5 bg-[#1e2024] border border-[#2f3238] focus:border-[#00b2ea] rounded-xl text-xs text-white outline-none transition-all"
-              />
-            </div>
+        {/* Error message */}
+        {error && (
+          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+            {error}
+          </div>
+        )}
 
-            {/* Drop Zone */}
+        {/* Step: Idle (Dropzone + Details) */}
+        {step === "idle" && (
+          <div className="space-y-4">
+            {/* Dropzone */}
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-[#2f3238] hover:border-[#00b2ea]/60 bg-[#1e2024]/50 hover:bg-[#1e2024] rounded-2xl p-8 text-center cursor-pointer transition-all space-y-3"
+              className="border-2 border-dashed border-white/12 hover:border-indigo-500/50 rounded-2xl p-8 text-center cursor-pointer bg-white/2 hover:bg-indigo-500/5 transition-all"
             >
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="audio/*,video/*,.mp3,.mp4,.m4a,.wav"
+                accept="audio/*,video/*"
                 onChange={handleFileSelect}
                 className="hidden"
               />
 
-              <div className="w-12 h-12 rounded-full bg-[#00b2ea]/15 border border-[#00b2ea]/30 flex items-center justify-center text-[#00b2ea] mx-auto">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-600/15 border border-indigo-500/30 flex items-center justify-center mx-auto mb-3 text-indigo-400">
                 <FileAudio className="w-6 h-6" />
               </div>
 
-              <div>
-                <p className="text-xs font-bold text-white">
-                  {file ? file.name : "Click to browse or drag and drop"}
-                </p>
-                <p className="text-[11px] text-[#9a9ba1] mt-1">
-                  Supports MP3, M4A, WAV, or MP4 up to 500MB
-                </p>
-              </div>
-
-              {file && (
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00b2ea]/15 text-[#00b2ea] text-xs font-mono">
-                  <span>{(file.size / (1024 * 1024)).toFixed(1)} MB</span>
-                  <span>•</span>
-                  <span>Ready</span>
+              {file ? (
+                <div>
+                  <p className="text-xs font-bold text-white truncate max-w-xs mx-auto">
+                    {file.name}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1 font-mono">
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs font-semibold text-white">
+                    Drag and drop audio/video file here, or click to browse
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Supports MP3, MP4, WAV, M4A, WEBM (up to 100MB)
+                  </p>
                 </div>
               )}
             </div>
 
-            {error && (
-              <div className="p-3 bg-[#ff4d4f]/10 border border-[#ff4d4f]/30 rounded-xl flex items-center gap-2 text-xs text-[#ff4d4f]">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+            {/* Title Input */}
+            <div>
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
+                Meeting Title
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Q4 Executive Planning Sync"
+                value={meetingTitle}
+                onChange={(e) => setMeetingTitle(e.target.value)}
+                className="w-full h-10 px-3.5 bg-[#0e121d] border border-white/8 focus:border-indigo-500/60 rounded-xl text-xs text-white placeholder-slate-400 outline-none transition-all"
+              />
+            </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-2">
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-[#1e2024] hover:bg-[#25282e] text-xs font-semibold text-[#9a9ba1] hover:text-white transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleStartProcessing}
                 disabled={!file}
-                className="px-6 py-2 bg-[#00b2ea] hover:bg-[#00c5ff] disabled:opacity-40 text-black font-bold text-xs rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-[#00b2ea]/20"
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-500/20 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
-                <span>Upload & Process</span>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Process with Gemini AI</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
-        ) : (
-          /* Processing State View */
-          <div className="py-8 space-y-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#00b2ea]/15 border border-[#00b2ea]/30 flex items-center justify-center text-[#00b2ea] mx-auto animate-pulse">
-              <Sparkles className="w-8 h-8 text-[#00b2ea]" />
+        )}
+
+        {/* Step: Processing Pipeline Progress */}
+        {step !== "idle" && (
+          <div className="py-6 space-y-6 text-center">
+            {/* Animated Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="text-white capitalize">
+                  {step === "uploading" && "1/3 Uploading Media Payload..."}
+                  {step === "transcribing" && "2/3 Diarizing & Transcribing..."}
+                  {step === "summarizing" && "3/3 Synthesizing Executive Brief..."}
+                  {step === "ready" && "Ready! Opening Meeting Room..."}
+                </span>
+                <span className="font-mono text-indigo-400">{progress}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  style={{ width: `${progress}%` }}
+                  className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-white">
-                {step === "uploading" && "Uploading media..."}
-                {step === "transcribing" && "Transcribing with Gemini AI..."}
-                {step === "summarizing" && "Generating summaries & action items..."}
-                {step === "ready" && "Processing complete!"}
-              </h3>
-              <p className="text-xs text-[#9a9ba1]">
-                {step === "uploading" && "Direct upload to storage..."}
-                {step === "transcribing" && "Detecting speakers, timestamps & words..."}
-                {step === "summarizing" && "Structuring Enhanced & General templates..."}
-                {step === "ready" && "Redirecting to your new call page..."}
-              </p>
+            {/* Step Indicators */}
+            <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-400 pt-2">
+              <div className={`p-2.5 rounded-xl border ${step === "uploading" ? "bg-indigo-600/10 border-indigo-500/30 text-indigo-300" : progress > 30 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/2 border-white/5"}`}>
+                <span className="font-bold block">1. Ingestion</span>
+                <span>Audio Stream</span>
+              </div>
+              <div className={`p-2.5 rounded-xl border ${step === "transcribing" ? "bg-indigo-600/10 border-indigo-500/30 text-indigo-300" : progress > 60 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/2 border-white/5"}`}>
+                <span className="font-bold block">2. Diarization</span>
+                <span>Speaker Sync</span>
+              </div>
+              <div className={`p-2.5 rounded-xl border ${step === "summarizing" ? "bg-indigo-600/10 border-indigo-500/30 text-indigo-300" : progress === 100 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/2 border-white/5"}`}>
+                <span className="font-bold block">3. Synthesis</span>
+                <span>Gemini 3.6 Flash</span>
+              </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full bg-[#1e2024] h-2 rounded-full overflow-hidden">
-              <div
-                style={{ width: `${progress}%` }}
-                className="bg-[#00b2ea] h-full rounded-full transition-all duration-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-xs text-[#9a9ba1]">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#00b2ea]" />
-              <span>Please do not close this window</span>
-            </div>
+            {step === "ready" && (
+              <div className="flex items-center justify-center gap-2 text-emerald-400 text-xs font-semibold">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Synthesis complete! Redirecting...</span>
+              </div>
+            )}
           </div>
         )}
       </div>

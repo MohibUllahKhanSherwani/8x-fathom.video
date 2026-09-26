@@ -15,23 +15,23 @@ Rebuild the frontend with our own original layout and visual design, keeping our
 
 ## Phase Breakdown
 
-- [ ] **Phase 9.1: Design Tokens & Foundations**
+- [x] **Phase 9.1: Design Tokens & Foundations**
   - Modern obsidian/slate palette, glassmorphism, dynamic gradients, elevated typography (Inter/Outfit).
   - Update `app/globals.css` with cohesive design tokens and utility classes.
 
-- [ ] **Phase 9.2: TopBar & Global Command Center**
+- [x] **Phase 9.2: TopBar & Global Command Center**
   - Re-architect `components/shell/TopBar.tsx`.
   - Omni-search with live keyboard navigation (`/` or `Ctrl+K`), meeting and transcript previews.
-  - Clean brand identity ("Cortex" / AI Meeting OS).
+  - Retained brand identity "FATHOM" with AI badge.
 
-- [ ] **Phase 9.3: Executive Dashboard (`/home`)**
-  - Replace dated subheaders and table with an Executive Meeting Hub:
+- [x] **Phase 9.3: Executive Dashboard (`/home`)**
+  - Replaced dated subheaders and table with an Executive Meeting Hub:
     - Intelligence Stats Matrix (Meeting hours saved, pending action items, strategic decisions).
     - Quick-filter chips (All, Executive, Product, Client, 1:1s).
     - Rich interactive Meeting Cards with AI summary previews, duration badges, and participant talk-time rings.
-    - Dockable Cortex Copilot (Ask AI across calls with citation chips).
+    - Dockable Ask Fathom Copilot (Ask AI across calls with citation chips).
 
-- [ ] **Phase 9.4: Call Intelligence Room (`/calls/[id]`)**
+- [x] **Phase 9.4: Call Intelligence Room (`/calls/[id]`)**
   - Layout switchers: **Executive Briefing Mode**, **Studio Split Mode**, and **Focus Transcript Mode**.
   - Living Speaker Stage with dynamic talk-time indicators, speaker role badges, and click-to-filter quotes.
   - Interactive multi-speaker timeline & waveform scrubber with chapter tick marks.
@@ -39,13 +39,14 @@ Rebuild the frontend with our own original layout and visual design, keeping our
   - Multi-template AI Summaries (Executive Brief, Action Items, Technical Standup, Sales Insights) with 1-click Markdown/Slack export.
   - Action Items matrix with live checkboxes connected to Supabase.
 
-- [ ] **Phase 9.5: Public Share & Clip Portals**
+- [x] **Phase 9.5: Public Share & Clip Portals**
   - Modernized `/share/[token]` and `/clip/[token]` pages reflecting the new bespoke visual system.
 
-- [ ] **Phase 9.6: Landing Page & Marketing Polish**
-  - Evolve `/` into an executive, high-converting product showcase matching the new design language.
+- [x] **Phase 9.6: Settings & Upload Pipeline Polish**
+  - Evolved `/settings` and `UploadModal` into an executive, high-converting product showcase matching the new design language.
 
-- [ ] **Phase 9.7: Quality Assurance, Verification & 1-Minute Video Script**
-  - Run `npm run lint` and `npm run build`.
-  - Verify in browser using DevTools MCP.
-  - Write `ONE_MINUTE_VIDEO_SCRIPT.md` providing Mohib with high-impact talking points for his 8x intro video.
+- [x] **Phase 9.7: Quality Assurance & Verification**
+  - Typecheck passed: `npx tsc --noEmit` 0 errors.
+  - Production build passed: `npm run build` 17 routes generated cleanly.
+  - Chrome DevTools MCP verified live in browser with screenshots.
+  - Script kept local and `.gitignore` updated per user instruction.

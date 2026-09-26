@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, PanelRightClose, PanelRight, Send, ChevronDown } from "lucide-react";
-import { FathomSwoosh } from "@/components/brand/Logo";
+import Link from "next/link";
+import { Sparkles, PanelRightClose, PanelRight, Send, Loader2, Clock } from "lucide-react";
 
 interface AskFathomPanelProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface AskFathomPanelProps {
 
 export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
   const [query, setQuery] = useState("");
-  const [scope] = useState<"my" | "team" | "all">("my");
+  const [scope, setScope] = useState<"my" | "team" | "all">("my");
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<
     Array<{
@@ -22,20 +22,27 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
   >([
     {
       role: "assistant",
-      text: "Hi! Ask me anything across your meetings, like 'What are my deadlines?', 'Who owns pricing?', or 'Summarize my meetings from today'.",
+      text: "Hello Mohib! I'm your Fathom AI Intelligence Copilot. Ask me anything across your meetings, or pick a prompt below:",
     },
   ]);
+
+  const promptSuggestions = [
+    "What are our main Q4 priorities and launch date?",
+    "What pricing was proposed for the Pro tier?",
+    "When is the SOC 2 audit report due?",
+    "List all action items assigned to Carlos Ramirez",
+  ];
 
   if (!isOpen) {
     return (
       <button
         onClick={onToggle}
-        className="fixed right-4 bottom-4 h-11 px-4 bg-[#1e2024] hover:bg-[#26292f] border border-[#2f3238] rounded-full shadow-2xl flex items-center gap-2 text-xs font-semibold text-white transition-all z-20 cursor-pointer"
-        title="Open Ask Fathom"
+        className="fixed right-6 bottom-6 h-12 px-5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-full shadow-2xl shadow-indigo-500/25 flex items-center gap-2.5 text-xs font-semibold transition-all z-20 cursor-pointer"
+        title="Open Ask Fathom Copilot"
       >
-        <Sparkles className="w-4 h-4 text-[#00b2ea]" />
-        <span>Ask Fathom</span>
-        <PanelRight className="w-4 h-4 text-[#9a9ba1]" />
+        <Sparkles className="w-4 h-4 text-white" />
+        <span>Ask Fathom AI</span>
+        <PanelRight className="w-4 h-4 text-indigo-200" />
       </button>
     );
   }
@@ -71,7 +78,7 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
         ...prev,
         {
           role: "assistant",
-          text: "Sorry, I had trouble answering that question. Please try again.",
+          text: "I encountered an issue querying the meeting intelligence engine. Please ensure your query relates to recorded calls.",
         },
       ]);
     } finally {
@@ -80,151 +87,138 @@ export function AskFathomPanel({ isOpen, onToggle }: AskFathomPanelProps) {
   };
 
   return (
-    <aside className="w-80 md:w-96 border-l border-[#26282d] bg-[#111214] flex flex-col h-[calc(100vh-3.5rem)] select-none shrink-0">
+    <aside className="w-80 md:w-96 border-l border-white/6 bg-[#0c0f17]/95 backdrop-blur-xl flex flex-col h-[calc(100vh-4rem)] select-none shrink-0 transition-all z-20">
       {/* Panel Header */}
-      <div className="h-11 px-4 border-b border-[#26282d] flex items-center justify-between text-xs bg-[#111214]">
-        <div className="flex items-center gap-2 font-bold tracking-wider text-xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#9a9ba1]" />
-          <span className="text-[#9a9ba1] font-semibold">ASK</span>
-          <span className="text-white font-bold">FATHOM</span>
-        </div>
-        <button
-          onClick={onToggle}
-          className="p-1 rounded hover:bg-[#1e2024] text-[#9a9ba1] hover:text-white transition-colors cursor-pointer"
-          title="Collapse panel"
-        >
-          <PanelRightClose className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Gold Announcement Banner */}
-      <div className="p-3 bg-[#242010] border-b border-[#e8b923]/30 text-[11px] text-[#e8b923] flex items-start justify-between gap-2 leading-relaxed">
-        <div className="flex items-start gap-2">
-          <span className="text-sm">🎁</span>
+      <div className="h-14 px-5 border-b border-white/6 flex items-center justify-between text-xs bg-white/2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <Sparkles className="w-3.5 h-3.5" />
+          </div>
           <div>
-            <span className="font-semibold text-[#f59e0b]">Account-level Ask Fathom is here!</span>{" "}
-            <span className="text-[#d1a13b]">
-              We&apos;re gifting you unlimited use until Oct 1. Limits may apply after.
-            </span>{" "}
-            <span className="underline cursor-pointer font-medium text-[#f59e0b]">Learn More</span>
+            <span className="text-white font-bold text-xs tracking-tight">Ask Fathom</span>
+            <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Live AI
+            </span>
           </div>
         </div>
-        <span className="text-[#d1a13b] text-[9px] cursor-pointer hover:text-white shrink-0 mt-0.5">▲</span>
+
+        <div className="flex items-center gap-2">
+          {/* Scope Selector */}
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value as "my" | "team" | "all")}
+            className="bg-[#141824] border border-white/8 text-[11px] text-slate-300 rounded-lg px-2 py-1 outline-none"
+          >
+            <option value="my">My Calls</option>
+            <option value="team">Team Calls</option>
+            <option value="all">All Calls</option>
+          </select>
+
+          <button
+            onClick={onToggle}
+            className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            title="Collapse panel"
+          >
+            <PanelRightClose className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-end space-y-4 text-xs">
-        {messages.length > 1 ? (
-          messages.slice(1).map((msg, idx) => (
+      {/* Messages Stream */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs">
+        {messages.map((m, i) => (
+          <div
+            key={i}
+            className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
+          >
             <div
-              key={idx}
-              className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+              className={`max-w-[90%] p-3.5 rounded-2xl leading-relaxed ${
+                m.role === "user"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-[#141926] border border-white/6 text-slate-200 shadow-inner"
+              }`}
             >
-              {msg.role === "user" ? (
-                <div className="max-w-[85%] bg-[#1e2024] border border-[#2f3238] text-white p-3 rounded-2xl rounded-tr-xs leading-relaxed">
-                  {msg.text}
-                </div>
-              ) : (
-                <div className="flex items-start gap-2.5 max-w-[95%]">
-                  <div className="w-6 h-6 rounded-full bg-[#111214] border border-[#2f3238] flex items-center justify-center shrink-0 mt-0.5">
-                    <FathomSwoosh className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="space-y-2 py-1">
-                    <div className="text-[#d1d5db] whitespace-pre-line leading-relaxed">
-                      {msg.text}
-                    </div>
+              <p className="whitespace-pre-wrap">{m.text}</p>
 
-                    {/* Citation chips */}
-                    {msg.citations && msg.citations.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {msg.citations.map((c, cIdx) => (
-                          <a
-                            key={cIdx}
-                            href={`/calls/${c.meetingId}?t=${c.ms}`}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#00b2ea]/15 hover:bg-[#00b2ea]/25 border border-[#00b2ea]/40 text-[#00b2ea] font-mono text-[10px] font-semibold transition-colors"
-                          >
-                            <span>{c.meetingTitle || "Call"}</span>
-                            <span>[{c.label}]</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+              {/* Timestamp Citations */}
+              {m.citations && m.citations.length > 0 && (
+                <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap gap-1.5">
+                  <span className="text-[10px] text-slate-400 font-medium block w-full mb-1">
+                    Citations from transcript:
+                  </span>
+                  {m.citations.map((c, cIdx) => (
+                    <Link
+                      key={cIdx}
+                      href={`/calls/${c.meetingId}?t=${c.ms}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors font-mono text-[10px]"
+                    >
+                      <Clock className="w-2.5 h-2.5" />
+                      <span>{c.label}</span>
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
-          ))
-        ) : null}
+          </div>
+        ))}
 
         {isLoading && (
-          <div className="flex items-center gap-2 text-xs text-[#9a9ba1]">
-            <Sparkles className="w-3.5 h-3.5 text-[#00b2ea] animate-spin" />
-            <span>Searching all meetings...</span>
+          <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-[#141926] border border-white/6 text-slate-400 text-xs w-fit">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+            <span>Analyzing meeting transcripts with Gemini...</span>
           </div>
         )}
-
-        {/* Suggested Prompts Stacked as in screenshot */}
-        <div className="space-y-2 pt-2 flex flex-col items-end">
-          {[
-            "Any looming deadlines?",
-            "Summarize my meetings from last week",
-            "Things I promised I'd do by this week",
-          ].map((prompt, i) => (
-            <button
-              key={i}
-              onClick={() => handleSend(prompt)}
-              className="px-3.5 py-2 rounded-xl bg-[#1a1c22] hover:bg-[#252833] border border-[#2e313b] hover:border-[#3a3d45] text-xs text-[#d1d5db] hover:text-white transition-all cursor-pointer shadow-xs text-right"
-            >
-              {prompt}
-            </button>
-          ))}
-          <div className="text-[#6b7280] text-[10px] pr-2 pt-0.5">▼</div>
-        </div>
       </div>
 
-      {/* Input Section Matching Screenshot */}
-      <div className="p-3 bg-[#111214] border-t border-[#26282d]">
-        <div className="bg-[#161719] border border-[#26282d] focus-within:border-[#3a3d45] rounded-xl transition-all">
-          <textarea
-            rows={2}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Ask anything..."
-            className="w-full p-2.5 text-xs text-white placeholder-[#555861] bg-transparent outline-none resize-none"
-          />
-
-          <div className="flex items-center justify-between px-2.5 pb-2">
-            {/* Scope Dropdown */}
-            <div className="relative">
+      {/* Suggested Prompts (if only 1 initial message) */}
+      {messages.length === 1 && (
+        <div className="px-4 pb-2">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            Suggested Prompts
+          </p>
+          <div className="space-y-1.5">
+            {promptSuggestions.map((prompt, idx) => (
               <button
-                type="button"
-                className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1e2024] hover:bg-[#25282e] border border-[#2f3238] text-[11px] text-[#9a9ba1] hover:text-white transition-colors cursor-pointer"
+                key={idx}
+                onClick={() => handleSend(prompt)}
+                className="w-full text-left p-2 rounded-xl bg-white/2 hover:bg-white/6 border border-white/5 hover:border-indigo-500/30 text-[11px] text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-between group"
               >
-                <span>{scope === "my" ? "My Calls" : scope === "team" ? "Team Calls" : "All Calls"}</span>
-                <ChevronDown className="w-3 h-3 text-[#9a9ba1]" />
+                <span className="truncate">{prompt}</span>
+                <span className="text-slate-500 group-hover:text-indigo-400 text-[10px]">↵</span>
               </button>
-            </div>
-
-            {/* Send Button */}
-            <button
-              onClick={() => handleSend()}
-              disabled={!query.trim() || isLoading}
-              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                query.trim()
-                  ? "bg-[#00b2ea] text-black hover:bg-[#00c5ff]"
-                  : "bg-[#1e2024] text-[#555861] cursor-not-allowed"
-              }`}
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* Input Box */}
+      <div className="p-4 border-t border-white/6 bg-white/1">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="relative flex items-center"
+        >
+          <input
+            type="text"
+            placeholder="Ask about decisions, dates, speakers..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            disabled={isLoading}
+            className="w-full h-10 pl-3.5 pr-10 bg-[#141824] border border-white/8 focus:border-indigo-500/60 rounded-xl text-xs text-white placeholder-slate-400 outline-none transition-all disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={!query.trim() || isLoading}
+            className="absolute right-2 p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg disabled:opacity-40 disabled:hover:bg-indigo-600 transition-all cursor-pointer"
+          >
+            <Send className="w-3 h-3" />
+          </button>
+        </form>
+        <p className="text-[10px] text-slate-400 text-center mt-2">
+          Powered by Gemini 3.6 Flash & Postgres Full-Text Search
+        </p>
       </div>
     </aside>
   );
