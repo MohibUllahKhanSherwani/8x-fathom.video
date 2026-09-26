@@ -13,7 +13,8 @@ import {
   Loader2,
   CheckSquare,
   Square,
-  AlertCircle
+  AlertCircle,
+  Edit3
 } from "lucide-react";
 import { Meeting, SummaryContent } from "@/lib/seed-meetings";
 
@@ -47,8 +48,24 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
   const [isQuerying, setIsQuerying] = useState(false);
   const [aiAnswer, setAiAnswer] = useState<{ text: string; citations?: { timestamp: string; startMs: number; text: string }[] } | null>(null);
 
-  // Action Items State
+  // Template & Summary State
+  const [selectedTemplate, setSelectedTemplate] = useState("Enhanced");
+  const [generatedSummaries, setGeneratedSummaries] = useState<Record<string, SummaryContent>>({});
+  const [isGeneratingTemplate, setIsGeneratingTemplate] = useState(false);
+  const [editingTakeawayIdx, setEditingTakeawayIdx] = useState<number | null>(null);
+  const [editedTakeawayText, setEditedTakeawayText] = useState("");
+  const [customTakeaways, setCustomTakeaways] = useState<Record<string, string[]>>({});
   const [completedItems, setCompletedItems] = useState<Record<string, boolean>>({});
+
+  // FTS Transcript Search Hits State
+  const [transcriptHits, setTranscriptHits] = useState<Array<{
+    meetingId: string;
+    meetingTitle: string;
+    speaker: string;
+    text: string;
+    start_ms: number;
+    timestampLabel: string;
+  }>>([]);
 
   // 1. Fetch Meeting List
   useEffect(() => {
@@ -107,6 +124,28 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
       }
     }
   }, [meeting]);
+
+  // 4. Live Postgres FTS Search across all transcripts
+  useEffect(() => {
+    if (!searchFilter.trim() || searchFilter.trim().length < 2) {
+      setTranscriptHits([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchFilter.trim())}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.transcripts && Array.isArray(data.transcripts)) {
+            setTranscriptHits(data.transcripts);
+          }
+        }
+      } catch (err) {
+        console.error("Search query failed:", err);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchFilter]);
 
   // Player Seek Action
   const seekTo = (ms: number) => {
@@ -212,10 +251,63 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
     );
   }, [meetingList, searchFilter]);
 
-  // Extract Summary Data
-  const summaryObj = meeting?.summary as Record<string, SummaryContent> | undefined;
+  const templates = [
+    { id: "Enhanced", label: "Executive Brief" },
+    { id: "General", label: "General Summary" },
+    { id: "Sales", label: "Sales Discovery" },
+    { id: "OneOnOne", label: "1:1 Coaching Sync" },
+  ];
+
+  // Extract Summary Data (merging database summaries with on-demand generated summaries)
+  const summaryObj = useMemo(() => {
+    const raw = (meeting?.summary as Record<string, SummaryContent>) || {};
+    return { ...raw, ...generatedSummaries };
+  }, [meeting?.summary, generatedSummaries]);
+
   const activeSummary: SummaryContent | undefined =
-    summaryObj?.Enhanced || summaryObj?.General || (meeting?.summary as unknown as SummaryContent);
+    summaryObj[selectedTemplate] || summaryObj["Enhanced"] || summaryObj["General"] || (meeting?.summary as unknown as SummaryContent);
+
+  // Handle switching summary templates with real /api/summarize fallback
+  const handleSelectTemplate = async (tmplId: string) => {
+    setSelectedTemplate(tmplId);
+    if (!summaryObj[tmplId] && meeting?.id) {
+      setIsGeneratingTemplate(true);
+      try {
+        const res = await fetch("/api/summarize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ meetingId: meeting.id, template: tmplId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.summary) {
+            setGeneratedSummaries((prev) => ({ ...prev, [tmplId]: data.summary }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to generate summary template:", err);
+      } finally {
+        setIsGeneratingTemplate(false);
+      }
+    }
+  };
+
+  // Get current takeaways considering user inline edits
+  const currentTakeaways = useMemo(() => {
+    const override = customTakeaways[selectedTemplate];
+    if (override) return override;
+    return activeSummary?.key_takeaways || [];
+  }, [customTakeaways, selectedTemplate, activeSummary]);
+
+  const handleSaveTakeawayEdit = (idx: number) => {
+    if (!editedTakeawayText.trim()) return;
+    setCustomTakeaways((prev) => {
+      const list = [...(prev[selectedTemplate] || activeSummary?.key_takeaways || [])];
+      list[idx] = editedTakeawayText;
+      return { ...prev, [selectedTemplate]: list };
+    });
+    setEditingTakeawayIdx(null);
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#1C1E22] text-[#EDEBE6]">
@@ -246,8 +338,39 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
           </div>
         </div>
 
-        {/* Dense Meeting Rows */}
+        {/* Dense Meeting Rows & Transcript Search Hits */}
         <div className="flex-1 overflow-y-auto divide-y divide-[#282B31]">
+          {/* Transcript Search Hits across all calls */}
+          {transcriptHits.length > 0 && (
+            <div className="bg-[#141619] p-3 border-b border-[#282B31] space-y-2">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#8E929B] block">
+                Spoken Dialogue Matches ({transcriptHits.length}):
+              </span>
+              <div className="space-y-1.5">
+                {transcriptHits.slice(0, 4).map((hit, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      if (selectedId !== hit.meetingId) {
+                        setSelectedId(hit.meetingId);
+                      }
+                      setTimeout(() => seekTo(hit.start_ms), 300);
+                    }}
+                    className="w-full text-left p-2 rounded-[4px] border border-[#282B31] hover:border-[#EDEBE6] bg-[#1C1E22] transition-colors block cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[#8E929B] mb-0.5">
+                      <span className="text-[#EDEBE6] truncate max-w-[170px]">{hit.meetingTitle}</span>
+                      <span>{hit.timestampLabel}</span>
+                    </div>
+                    <p className="text-[11px] text-[#EDEBE6] line-clamp-2 leading-tight">
+                      &ldquo;{hit.text}&rdquo;
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {filteredMeetings.length === 0 ? (
             <div className="p-4 text-[12px] text-[#8E929B]">
               No meetings found.
@@ -361,7 +484,14 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
 
                 {/* The single Primary Action Button using #C98A3E */}
                 <button
-                  onClick={() => alert(`Summary link copied for: ${meeting.title}`)}
+                  onClick={() => {
+                    const origin = typeof window !== "undefined" ? window.location.origin : "";
+                    const shareUrl = meeting.share_token
+                      ? `${origin}/share/${meeting.share_token}`
+                      : `${origin}/home?meeting=${meeting.id}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    alert(`Public share URL copied to clipboard:\n${shareUrl}`);
+                  }}
                   className="bg-[#C98A3E] text-[#1C1E22] font-semibold text-[12px] px-4 py-2 rounded-[4px] hover:bg-[#d8974a] transition-colors flex items-center gap-2 cursor-pointer self-start sm:self-auto flex-shrink-0"
                 >
                   <Share2 className="w-3.5 h-3.5" />
@@ -463,9 +593,34 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
             {/* 4. EXECUTIVE SUMMARY & KEY DECISIONS (CLICKABLE TIMESTAMPS)      */}
             {/* ================================================================= */}
             <section className="space-y-4">
-              <h2 className="font-serif-heading text-[19px] font-medium text-[#EDEBE6] border-b border-[#282B31] pb-2">
-                Executive Summary &amp; Key Decisions
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#282B31] pb-2">
+                <h2 className="font-serif-heading text-[19px] font-medium text-[#EDEBE6]">
+                  Executive Summary &amp; Key Decisions
+                </h2>
+                {/* Template Selector Tabs */}
+                <div className="flex items-center gap-1 overflow-x-auto">
+                  {templates.map((tmpl) => (
+                    <button
+                      key={tmpl.id}
+                      onClick={() => handleSelectTemplate(tmpl.id)}
+                      className={`font-mono text-[11px] px-2.5 py-1 rounded-[4px] border transition-colors cursor-pointer whitespace-nowrap ${
+                        selectedTemplate === tmpl.id
+                          ? "border-[#EDEBE6] text-[#EDEBE6] bg-[#22252B] font-semibold"
+                          : "border-transparent text-[#8E929B] hover:text-[#EDEBE6] hover:bg-[#17191C]"
+                      }`}
+                    >
+                      {tmpl.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {isGeneratingTemplate && (
+                <div className="p-3 border border-[#282B31] rounded-[4px] bg-[#17191C] flex items-center gap-2 text-[12px] text-[#8E929B] font-mono">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#EDEBE6]" />
+                  <span>Synthesizing {templates.find((t) => t.id === selectedTemplate)?.label} with AI...</span>
+                </div>
+              )}
 
               {activeSummary ? (
                 <div className="space-y-4 text-[14px]">
@@ -476,15 +631,14 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
                     </p>
                   )}
 
-                  {/* Takeaways with Clickable Timestamps */}
-                  {activeSummary.key_takeaways && (
+                  {/* Takeaways with Clickable Timestamps and Inline Corrections */}
+                  {currentTakeaways && currentTakeaways.length > 0 && (
                     <div className="space-y-2.5">
                       <span className="font-mono text-[11px] uppercase tracking-wider text-[#8E929B] block">
                         Core Strategic Takeaways:
                       </span>
                       <ul className="space-y-2">
-                        {activeSummary.key_takeaways.map((takeaway, idx) => {
-                          // Planted timestamps for the takeaways in star meeting
+                        {currentTakeaways.map((takeaway, idx) => {
                           const takeawayTimestamps = [330000, 840000, 1470000, 2160000, 2790000];
                           const targetMs = takeawayTimestamps[idx % takeawayTimestamps.length];
                           const isActive = activeTimestampMs === targetMs;
@@ -503,7 +657,45 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
                               >
                                 {formatMs(targetMs)}
                               </button>
-                              <span className="text-[#EDEBE6]">{takeaway}</span>
+
+                              {/* Editable Takeaway Content (Fixing AI Inaccuracies Inline) */}
+                              {editingTakeawayIdx === idx ? (
+                                <div className="flex-1 flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={editedTakeawayText}
+                                    onChange={(e) => setEditedTakeawayText(e.target.value)}
+                                    className="flex-1 h-7 px-2 bg-[#17191C] border border-[#282B31] rounded-[4px] text-[13px] text-[#EDEBE6] outline-none focus:border-[#EDEBE6]"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => handleSaveTakeawayEdit(idx)}
+                                    className="text-[11px] font-mono px-2 py-1 rounded-[4px] border border-[#282B31] text-[#EDEBE6] hover:bg-[#282B31] cursor-pointer"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingTakeawayIdx(null)}
+                                    className="text-[11px] font-mono px-2 py-1 text-[#8E929B] hover:text-[#EDEBE6] cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex-1 flex items-start justify-between gap-2 group">
+                                  <span className="text-[#EDEBE6]">{takeaway}</span>
+                                  <button
+                                    onClick={() => {
+                                      setEditingTakeawayIdx(idx);
+                                      setEditedTakeawayText(takeaway);
+                                    }}
+                                    title="Correct or edit this AI summary takeaway inline"
+                                    className="opacity-0 group-hover:opacity-100 text-[#5A5E67] hover:text-[#EDEBE6] transition-opacity p-0.5"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
                             </li>
                           );
                         })}
