@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,9 +7,15 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const lora = Lora({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
 export const metadata: Metadata = {
-  title: "Fathom AI Notetaker - Never Take Notes Again",
-  description: "Fathom captures, transcribes, and summarizes Zoom, Google Meet, and Microsoft Teams calls.",
+  title: "Fathom AI Notetaker",
+  description: "Executive meeting recording, transcription, and synthesis.",
 };
 
 export default function RootLayout({
@@ -18,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} dark antialiased`}>
-      <body className="min-h-screen bg-[#111214] text-white flex flex-col">
+    <html lang="en" className={`${inter.variable} ${lora.variable} antialiased`}>
+      <body className="min-h-screen bg-[#1C1E22] text-[#EDEBE6] font-sans">
         {children}
       </body>
     </html>

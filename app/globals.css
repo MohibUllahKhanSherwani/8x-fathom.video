@@ -1,86 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  /* Bespoke Executive Design Tokens */
-  --bg-page: #090a0f;
-  --bg-surface: #0f121a;
-  --bg-card: #131722;
-  --bg-card-hover: #191f2e;
-  --bg-glass: rgba(19, 23, 34, 0.72);
-  --bg-glass-elevated: rgba(25, 31, 46, 0.85);
+  /* Graphite & Bone Palette */
+  --bg-base: #1C1E22;
+  --bg-rail: #17191C;
+  --bg-active: #22252B;
+  --border-separation: #282B31;
 
-  --border-glass: rgba(255, 255, 255, 0.07);
-  --border-subtle: #1c2230;
-  --border-default: #262e42;
-  --border-active: #4f46e5;
+  --text-primary: #EDEBE6;
+  --text-secondary: #8E929B;
+  --text-muted: #5A5E67;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-faint: #64748b;
+  /* ONE ACCENT COLOR ONLY: Used ONLY for recording indicator, active timestamps, and primary action button */
+  --accent-amber: #C98A3E;
 
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #818cf8;
-  --accent-secondary: #06b6d4;
-  --accent-secondary-hover: #38bdf8;
-  --accent-success: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-serif), Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 body {
-  background-color: var(--bg-page);
-  color: var(--text-primary);
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #1C1E22;
+  color: #EDEBE6;
+  font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism primitives */
-.glass-panel {
-  background: var(--bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-glass);
+.font-serif-heading {
+  font-family: var(--font-serif);
 }
 
-.glass-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.glass-card:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(99, 102, 241, 0.3);
-  transform: translateY(-1px);
-}
-
-/* Modern subtle glow */
-.glow-primary {
-  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.25);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 20px -4px rgba(16, 185, 129, 0.3);
-}
-
-/* Custom Scrollbars */
+/* Restrained minimal scrollbar — no rounded pills, no glow */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #262e42;
-  border-radius: 9999px;
+  background: #282B31;
+  border-radius: 2px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b4663;
+  background: #3A3E46;
 }

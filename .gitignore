@@ -49,3 +49,10 @@ ONE_MINUTE_VIDEO_SCRIPT.md
 *video_script*
 demo_notes.md
 scratch/
+
+# Ignore all pictures and screenshots
+*.png
+*.jpg
+*.jpeg
+*.webp
+*screenshot*
