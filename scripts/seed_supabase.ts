@@ -64,6 +64,7 @@ async function seed() {
 
     // 2. Insert Participants
     if (meeting.participants && meeting.participants.length > 0) {
+      await supabase.from("participants").delete().eq("meeting_id", meeting.id);
       const participantRows = meeting.participants.map((p) => ({
         meeting_id: meeting.id,
         name: p.name,
@@ -98,6 +99,7 @@ async function seed() {
 
     // 4. Insert Action Items
     if (meeting.action_items && meeting.action_items.length > 0) {
+      await supabase.from("action_items").delete().eq("meeting_id", meeting.id);
       const actionRows = meeting.action_items.map((a) => ({
         meeting_id: meeting.id,
         source: a.source || "ai",
@@ -114,6 +116,7 @@ async function seed() {
 
     // 5. Insert Segments (in batches of 50 to avoid payload limits)
     if (meeting.segments && meeting.segments.length > 0) {
+      await supabase.from("segments").delete().eq("meeting_id", meeting.id);
       const segmentRows = meeting.segments.map((s, index) => ({
         meeting_id: meeting.id,
         idx: s.id || index + 1,

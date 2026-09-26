@@ -695,3 +695,32 @@ Times are relative to the start of building and assume about 20 working hours pl
 6. Local setup: env vars, migrations, seed commands, run
 7. Testing notes and known limitations (upload limits, timestamp drift on long audio, free-tier rate limits)
 8. Agent usage: `.agent-logs/` explanation
+
+---
+
+## 22. Phase 9 — Strategic Redesign & Visual Architecture (8x Feedback)
+
+### 22.1 Context & Core Requirement
+8x evaluation directive received September 26, 2026:
+> "The original brief asked you to clone an existing site. We've changed it, because we want to see your own design choices. Keep your idea and your backend, and rebuild the frontend with your own layout and visual design. The backend has to be real and connected: a working database and API, not mock data or hardcoded responses. Use the product as your reference, not your blueprint. A pixel-for-pixel copy tells us very little. Show us what you would change, what you would cut and how you would make it better to use. We want to see how you take inspiration and make product decisions."
+
+### 22.2 Product Identity & Name
+- **Name**: Retain `Fathom` / `Fathom AI` (as instructed by the user).
+- **Positioning**: Executive Meeting OS & High-Velocity AI Intelligence Hub.
+
+### 22.3 Backend Invariants (Real & Connected)
+- Supabase PostgreSQL: `meetings`, `participants`, `segments`, `summaries`, `action_items`, `highlights`, `clips`, `chat_sessions`, `chat_messages`.
+- Live APIs: `/api/meetings`, `/api/meetings/[id]`, `/api/ask`, `/api/action-items`, `/api/summarize`, `/api/search`, `/api/upload`.
+- Real Full-Text Search via Postgres GIN index.
+- Real Gemini Long-Context AI with key rotation.
+- Real binary-search media-transcript synchronization.
+
+### 22.4 Frontend Redesign Matrix (What We Changed, What We Cut, What We Elevated)
+1. **Top Navigation (`TopBar`)**:
+   - Modern floating command bar with omni-search (`Ctrl+K` / `/`), workspace indicator, new meeting action, and instant status pill.
+2. **Dashboard (`/home`)**:
+   - Cut: Rigid subheaders (`Playlists`, `Alerts`, `Deals`), tiny table rows.
+   - Added: Executive Intelligence Stats Matrix (Meeting hours analyzed, open action items, key decisions), category filter pills, rich interactive meeting cards with AI summary snippets and participant talk-time rings, dockable Ask Fathom copilot.
+3. **Meeting Room (`/calls/[id]`)**:
+   - Cut: Rigid 3-column split squeeze, static avatar circles.
+   - Added: Adaptive layout switcher (Executive Briefing Mode, Split Studio Mode, Deep Transcript Mode), active speaker stage with audio wave pulse, color-coded multi-speaker timeline, sub-100ms transcript with quote clipper, and actionable task matrix.

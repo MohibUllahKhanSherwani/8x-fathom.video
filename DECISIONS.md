@@ -55,9 +55,24 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
 - **Decision**: Revert the synthetic action banner on the Home page (`/home`) and align the layout pixel-for-pixel with the user's live Fathom screenshot. Display distinct subheader tabs (`My Calls` with cyan underline and "Click to return home" tooltip, `Team Calls`, `Playlists`, `Alerts`, `Deals`), clean `Today` section featuring `Test call` with the exact bottom-left overlay badge (`Click "Start Recording" in Fathom`), `2 mins` duration badge, and three-dots action menu, followed by older seeded videos under `Earlier`.
 - **Rationale**: The user provided an exact reference screenshot from their live session. Preserving ground-truth parity without extraneous banners or deviations ensures zero uncanny valley and directly satisfies the 8x UX/UI evaluation rubric.
 
-### D-014: Multi-Key Rotation & Automatic Quota Failover with Retry
-- **Decision**: Implement a resilient Gemini client in `lib/gemini.ts` that detects all available API keys (`GEMINI_API_KEY`, `GEMINI_API_KEY_2`, `GEMINI_API_KEY_3`, or comma-separated lists), automatically detects 429 quota exhaustion or rate limits, and immediately rotates to the next available API key with exponential backoff retry.
-- **Rationale**: During live testing and reviewer evaluations, LLM quotas can be saturated rapidly. Automatic key rotation and retry ensure zero downtime, preventing 429 errors from degrading reviewer demonstrations or AI summary generation.
+### D-015: 8x Strategic Redesign — Bespoke Architecture & Connected Backend
+- **Context & Feedback**: 8x provided new guidance: "The original brief asked you to clone an existing site. We've changed it, because we want to see your own design choices. Keep your idea and your backend, and rebuild the frontend with your own layout and visual design. The backend has to be real and connected: a working database and API, not mock data or hardcoded responses. Use the product as your reference, not your blueprint. A pixel-for-pixel copy tells us very little. Show us what you would change, what you would cut and how you would make it better to use. We want to see how you take inspiration and make product decisions."
+- **Brand Decision**: Retain the core brand identity "Fathom" / "Fathom AI" as explicitly instructed by the user, while transforming the UI from a clone into a flagship Executive Meeting OS.
+- **Backend Architecture Invariant**:
+  - Keep 100% of the live backend intact and fully connected: Supabase PostgreSQL tables (`meetings`, `participants`, `segments`, `summaries`, `action_items`, `highlights`, `clips`, `chat_sessions`, `chat_messages`).
+  - Keep all real API endpoints (`/api/meetings`, `/api/meetings/[id]`, `/api/ask`, `/api/action-items`, `/api/summarize`, `/api/search`, `/api/upload`).
+  - Real Gemini long-context LLM with multi-key failover and retry.
+  - Real Postgres FTS via GIN indexed `tsv`.
+  - Zero mock data or hardcoded fake responses in production pathways.
+- **Frontend Architecture & Product Decisions**:
+  1. **What we cut**:
+     - Cluttered, dated subheader tabs (`Playlists`, `Alerts`, `Deals`) that confuse the information architecture.
+     - Rigid 3-column squeeze on the Call Page where summary and transcript compete for width.
+     - Static avatar circles that offer no active visual feedback during playback.
+  2. **What we changed & elevated**:
+     - **Executive Command Center (`/home`)**: Live Intelligence Matrix stats (Meeting hours analyzed, Action items pending, Strategic decisions tracked), quick-filter pills (All, Executive, Product, Client, 1:1), and rich meeting cards with AI summary teasers and participant talk-time rings.
+     - **Dynamic Meeting Intelligence Room (`/calls/[id]`)**: 3 adaptive viewing modes (Executive Briefing Mode, Split Studio Mode, Deep Transcript Mode), active speaker stage with audio wave pulse, color-coded multi-speaker timeline, and instant quote clipping.
+     - **Cohesive Design System**: Deep obsidian / slate palette (`#0B0D13`, `#121620`, `#1A202E`), emerald and electric indigo accents, frosted glass layers, elevated typography, and fluid micro-interactions.
 
 
 

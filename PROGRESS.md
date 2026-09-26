@@ -63,6 +63,14 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Run QA checklist against live deployment & build
   - [x] Complete `README.md` and verify `DECISIONS.md`
   - [x] Verify `.agent-logs/` is complete and up to date
-  - [ ] Record 5-min walkthrough video (camera on, voiceover)
-  - [ ] Final submission verification
+
+- [ ] **Phase 9: Bespoke Product Redesign & Real Backend Architecture (8x Feedback)**
+  - [x] Step 1: Verify real connected backend (Supabase DB, real Gemini AI, Postgres FTS, no mock/hardcoded data)
+  - [ ] Step 2: Global design system & tokens (`globals.css`, modern obsidian/slate palette, glassmorphism)
+  - [ ] Step 3: Top navigation & floating command bar (`TopBar.tsx`, omni-search, workspace switcher)
+  - [ ] Step 4: Executive Meeting Hub dashboard (`/home`, intelligence stats matrix, rich meeting cards, filter pills, dockable Ask Fathom copilot)
+  - [ ] Step 5: Meeting Intelligence Room (`/calls/[id]`, 3 adaptive viewing modes, living speaker stage, multi-speaker waveform timeline, sub-100ms synced transcript, multi-template summaries, interactive action items board)
+  - [ ] Step 6: Public Share & Clip portals (`/share/[token]`, `/clip/[token]`)
+  - [ ] Step 7: Landing page & marketing polish (`/`, executive product presentation)
+  - [ ] Step 8: Build pass & 1-minute intro video script for Mohib (`ONE_MINUTE_VIDEO_SCRIPT.md`)
 
