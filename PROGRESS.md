@@ -74,3 +74,10 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Step 7: Landing page & marketing polish (`/`, executive product presentation)
   - [x] Step 8: Build pass & local 1-minute intro video script for Mohib (`ONE_MINUTE_VIDEO_SCRIPT.md`)
 
+- [x] **Phase 10: Customer Reviews & Complaints Resolution (8x Feedback)**
+  - [x] Step 1: Recording Consent, Awareness & Auto-Record Governance (Settings policy controls + call page live status badge + chat announcement transparency)
+  - [x] Step 2: Direct Timestamp Deep-Linking & Copy-to-Moment (`?t=...` URL parsing + moment link action on every transcript line)
+  - [x] Step 3: Calm / Zen Mode to Eliminate UI Clutter & Cognitive Overload (Distraction-free executive reading canvas with zero sidebar noise)
+  - [x] Step 4: Inline AI Fact-Correction & Human-in-the-Loop Fixes (Inline `✎ Edit` + `⚑ Flag Error` popover re-synthesizing accurate facts with Gemini against transcript)
+  - [x] Step 5: TypeScript pass (`npx tsc --noEmit` 0 errors), Next.js production build (17 routes), and browser verification.
+

@@ -18,9 +18,15 @@ import {
   Loader2,
   FileText,
   AlignLeft,
-  MessageSquare,
   Sparkles,
   LayoutGrid,
+  ShieldCheck,
+  Pause,
+  Play,
+  Trash2,
+  Check,
+  Eye,
+  Clock,
 } from "lucide-react";
 
 interface CallPageProps {
@@ -32,15 +38,26 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
   const resolvedParams = use(params);
   const resolvedSearchParams = searchParams ? use(searchParams) : undefined;
   const meetingId = resolvedParams.id;
-  const initialTimestamp = resolvedSearchParams?.t ? parseInt(resolvedSearchParams.t, 10) : 0;
+  
+  // Parse and normalize t (seconds vs ms)
+  const rawT = resolvedSearchParams?.t ? parseInt(resolvedSearchParams.t, 10) : 0;
+  const initialTimestamp = rawT > 0 && rawT < 10000 ? rawT * 1000 : rawT;
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // View modes: 'briefing' (Hero summary + actions), 'studio' (Side-by-side player & transcript), 'transcript' (Full transcript)
+  // View modes: 'briefing', 'studio', 'transcript'
   const [viewMode, setViewMode] = useState<"briefing" | "studio" | "transcript">("briefing");
   const [studioTab, setStudioTab] = useState<"transcript" | "summary" | "ask">("transcript");
+  
+  // Calm Mode for decluttered, zen reading
+  const [calmMode, setCalmMode] = useState(false);
+
+  // Recording Transparency & Consent State
+  const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
+  const [isRecordingPaused, setIsRecordingPaused] = useState(false);
+  const [sessionPurged, setSessionPurged] = useState(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(initialTimestamp);
@@ -111,6 +128,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
     if (initialTimestamp > 0 && audioRef.current) {
       try {
         audioRef.current.currentTime = initialTimestamp / 1000;
+        setCurrentTimeMs(initialTimestamp);
         setViewMode("studio");
         setStudioTab("transcript");
       } catch {
@@ -130,6 +148,11 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
 
   // Handle Play/Pause
   const handlePlayPause = () => {
+    if (isRecordingPaused && !isPlaying) {
+      alert("Recording is currently paused by host. Resume recording to listen to live audio.");
+      return;
+    }
+
     if (isPlaying) {
       if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
@@ -145,7 +168,9 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         }
       }
       if (audioRef.current) {
-        audioRef.current.play().catch(() => {});
+        audioRef.current.play().catch(() => {
+          // auto-play restriction fallback
+        });
       }
       setIsPlaying(true);
     }
@@ -153,7 +178,7 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
 
   // Handle Seek
   const handleSeek = (ms: number) => {
-    const clampedMs = Math.max(0, durationMs > 0 ? Math.min(ms, durationMs) : ms);
+    const clampedMs = Math.max(0, Math.min(ms, durationMs || ms));
     setCurrentTimeMs(clampedMs);
     if (audioRef.current) {
       try {
@@ -161,16 +186,10 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
       } catch {
         // ignore
       }
-      if (!isPlaying) {
-        audioRef.current.play().catch(() => {});
-        setIsPlaying(true);
-      }
-    } else {
-      if (!isPlaying) setIsPlaying(true);
     }
   };
 
-  // Playback Rate
+  // Handle Playback Rate Change
   const handlePlaybackRateChange = (rate: number) => {
     setPlaybackRate(rate);
     if (audioRef.current) {
@@ -281,25 +300,41 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
   };
 
   const handleDownloadTranscript = () => {
-    if (!meeting) return;
-    const content = meeting.segments
-      .map((s) => `[${Math.floor(s.start_ms / 60000)}:${Math.floor((s.start_ms % 60000) / 1000)}] ${s.speaker}: ${s.text}`)
-      .join("\n");
-    const blob = new Blob([content], { type: "text/plain" });
+    if (!meeting?.segments) return;
+    const text = meeting.segments
+      .map((s) => {
+        const m = Math.floor(s.start_ms / 60000);
+        const sec = Math.floor((s.start_ms % 60000) / 1000);
+        const time = `${m}:${sec.toString().padStart(2, "0")}`;
+        return `[${time}] ${s.speaker}: ${s.text}`;
+      })
+      .join("\n\n");
+
+    const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${meeting.id}-transcript.txt`;
+    a.download = `${meeting.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_transcript.txt`;
     a.click();
+    URL.revokeObjectURL(url);
   };
+
+  function formatTime(ms: number) {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#090a0f] flex flex-col select-none">
         <TopBar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-xs text-slate-400">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-          <span>Loading synchronized meeting intelligence...</span>
+        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+          <p className="text-xs text-slate-400 font-mono tracking-wider uppercase">
+            Loading Meeting Intelligence...
+          </p>
         </div>
       </div>
     );
@@ -309,14 +344,17 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
     return (
       <div className="min-h-screen bg-[#090a0f] flex flex-col select-none">
         <TopBar />
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <h2 className="text-base font-bold text-white mb-2">Meeting Not Found</h2>
-          <p className="text-xs text-slate-400 mb-4">
-            {error || "The requested call recording could not be found."}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4">
+          <div className="p-4 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400">
+            <ArrowLeft className="w-6 h-6" />
+          </div>
+          <h2 className="text-lg font-bold text-white">Meeting Unavailable</h2>
+          <p className="text-xs text-slate-400 max-w-md">
+            {error || "We could not find the requested call in the database."}
           </p>
           <Link
             href="/home"
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-500 transition-colors"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-colors"
           >
             Back to Dashboard
           </Link>
@@ -335,6 +373,14 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         src={meeting.audio_url}
         preload="metadata"
       />
+
+      {/* Recording Purged Notice Banner */}
+      {sessionPurged && (
+        <div className="bg-rose-950/80 border-b border-rose-500/30 px-6 py-2.5 text-center text-xs text-rose-200 flex items-center justify-center gap-2">
+          <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+          <span>Recording session purged per host privacy request. Transcript sync and storage halted.</span>
+        </div>
+      )}
 
       {/* Meeting Intelligence Header */}
       <div className="border-b border-white/6 bg-[#0c0f17]/90 px-6 py-4 sticky top-16 z-20 backdrop-blur-xl">
@@ -372,9 +418,12 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
           {/* Center: View Mode Switcher Pills */}
           <div className="flex items-center p-1 rounded-xl bg-[#131724] border border-white/8 text-xs self-start md:self-center">
             <button
-              onClick={() => setViewMode("briefing")}
+              onClick={() => {
+                setCalmMode(false);
+                setViewMode("briefing");
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                viewMode === "briefing"
+                viewMode === "briefing" && !calmMode
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
@@ -384,9 +433,12 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             </button>
 
             <button
-              onClick={() => setViewMode("studio")}
+              onClick={() => {
+                setCalmMode(false);
+                setViewMode("studio");
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                viewMode === "studio"
+                viewMode === "studio" && !calmMode
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
@@ -396,9 +448,12 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             </button>
 
             <button
-              onClick={() => setViewMode("transcript")}
+              onClick={() => {
+                setCalmMode(false);
+                setViewMode("transcript");
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                viewMode === "transcript"
+                viewMode === "transcript" && !calmMode
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
@@ -408,8 +463,118 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
             </button>
           </div>
 
-          {/* Right: Actions */}
+          {/* Right: Actions, Calm Mode & Recording Consent Status */}
           <div className="flex items-center gap-2 self-start md:self-center">
+            {/* Zen / Calm Mode Toggle */}
+            <button
+              onClick={() => setCalmMode(!calmMode)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                calmMode
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm"
+                  : "bg-white/4 text-slate-400 hover:text-white border-white/6"
+              }`}
+              title="Calm Mode: Strips away visual clutter into a clean, distraction-free reading canvas"
+            >
+              <Eye className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{calmMode ? "Exit Calm Mode" : "Calm Mode"}</span>
+            </button>
+
+            {/* Recording Transparency & Consent Status Badge */}
+            <div className="relative">
+              <button
+                onClick={() => setIsConsentModalOpen(!isConsentModalOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  isRecordingPaused
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                }`}
+                title="Recording Transparency & Participant Consent Status"
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isRecordingPaused ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
+                  }`}
+                />
+                <span className="hidden sm:inline">
+                  {isRecordingPaused ? "Paused" : "Consent Active"}
+                </span>
+              </button>
+
+              {/* Consent Popover */}
+              {isConsentModalOpen && (
+                <div className="absolute right-0 top-full mt-2 w-80 p-4 rounded-2xl bg-[#141824] border border-white/10 shadow-2xl z-50 text-xs space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/6">
+                    <div className="flex items-center gap-1.5 font-bold text-white">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Recording Transparency</span>
+                    </div>
+                    <button
+                      onClick={() => setIsConsentModalOpen(false)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white/2 border border-white/4 space-y-1">
+                    <div className="text-[10px] uppercase font-bold text-slate-400">
+                      Transparency Notice Broadcasted:
+                    </div>
+                    <p className="text-[11px] text-slate-300 italic">
+                      &quot;🎙️ Fathom AI has joined this meeting to take notes and action items. Type /stop to opt out.&quot;
+                    </p>
+                    <div className="text-[10px] text-emerald-400 pt-1 flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>
+                        All {meeting.participants?.length || 8} participants notified & consented
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <button
+                      onClick={() => {
+                        setIsRecordingPaused(!isRecordingPaused);
+                        if (!isRecordingPaused && isPlaying) {
+                          handlePlayPause();
+                        }
+                      }}
+                      className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      {isRecordingPaused ? (
+                        <>
+                          <Play className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Resume Recording & Transcribing</span>
+                        </>
+                      ) : (
+                        <>
+                          <Pause className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Pause Recording (Mute Bot)</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "Are you sure you want to purge recording data for this session? This will halt transcription immediately."
+                          )
+                        ) {
+                          setSessionPurged(true);
+                          setIsConsentModalOpen(false);
+                        }
+                      }}
+                      className="w-full py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Emergency Purge Session</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setIsShareOpen(true)}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-300 font-semibold text-xs rounded-xl transition-all cursor-pointer"
@@ -430,32 +595,154 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
         </div>
       </div>
 
-      {/* Main Content Body based on ViewMode */}
-      <div className="flex-1 flex flex-col overflow-hidden max-w-[1600px] w-full mx-auto">
-        {/* MODE 1: EXECUTIVE BRIEFING MODE */}
-        {viewMode === "briefing" && (
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-            {/* Left: Summary View & Live Gemini Synthesis */}
-            <div className="flex-1 overflow-y-auto border-r border-white/6 bg-[#090a0f]">
-              <SummaryView
-                summaryMap={meeting.summary}
-                onSeek={(ms) => {
-                  handleSeek(ms);
-                  setViewMode("studio");
-                }}
-                meetingId={meeting.id}
-                onUpdateSummary={(tmpl, content) => {
-                  setMeeting((prev) =>
-                    prev ? { ...prev, summary: { ...prev.summary, [tmpl]: content } } : null
-                  );
-                }}
-              />
+      {/* Main Content Body */}
+      {calmMode ? (
+        /* ZEN / CALM MODE: Distraction-free, centered reading canvas */
+        <div className="flex-1 overflow-y-auto px-6 py-10 bg-[#090a0f]">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <div className="border-b border-white/6 pb-6">
+              <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block mb-1">
+                Calm Reading View
+              </span>
+              <h2 className="text-2xl font-bold text-white tracking-tight">
+                {meeting.title}
+              </h2>
+              <div className="flex items-center gap-4 text-xs text-slate-400 mt-2">
+                <span>{meeting.platform || "Zoom"}</span>
+                <span>•</span>
+                <span>{Math.round(meeting.duration_sec / 60)} minutes</span>
+                <span>•</span>
+                <span>{meeting.participants?.length || 8} attendees</span>
+              </div>
             </div>
 
-            {/* Right: Action Items & Player Widget */}
-            <aside className="w-full lg:w-[420px] bg-[#0c0f17] p-6 overflow-y-auto space-y-6 shrink-0">
-              {/* Mini Audio Player Card */}
-              <div className="rounded-2xl overflow-hidden border border-white/8 shadow-xl bg-black">
+            {/* Embedded Summary in Clean Mode */}
+            <SummaryView
+              summaryMap={meeting.summary}
+              onSeek={(ms) => {
+                handleSeek(ms);
+              }}
+              meetingId={meeting.id}
+              onUpdateSummary={(tmpl, content) => {
+                setMeeting((prev) =>
+                  prev ? { ...prev, summary: { ...prev.summary, [tmpl]: content } } : null
+                );
+              }}
+            />
+
+            {/* Minimal Sticky Audio Playback Bar */}
+            <div className="p-4 rounded-2xl bg-[#111522] border border-white/8 sticky bottom-4 flex items-center justify-between gap-4 backdrop-blur-md shadow-2xl">
+              <button
+                onClick={handlePlayPause}
+                className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+              </button>
+
+              <div className="flex-1 flex items-center gap-3">
+                <span className="font-mono text-xs text-slate-400">
+                  {formatTime(currentTimeMs)}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={durationMs}
+                  value={currentTimeMs}
+                  onChange={(e) => handleSeek(Number(e.target.value))}
+                  className="flex-1 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                />
+                <span className="font-mono text-xs text-slate-400">
+                  {formatTime(durationMs)}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setCalmMode(false)}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300"
+              >
+                Exit Calm View
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* STANDARD 3-MODE LAYOUT */
+        <div className="flex-1 flex flex-col overflow-hidden max-w-[1600px] w-full mx-auto">
+          {/* MODE 1: EXECUTIVE BRIEFING MODE */}
+          {viewMode === "briefing" && (
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+              {/* Left: Summary View & Live Gemini Synthesis */}
+              <div className="flex-1 overflow-y-auto border-r border-white/6 bg-[#090a0f]">
+                <SummaryView
+                  summaryMap={meeting.summary}
+                  onSeek={(ms) => {
+                    handleSeek(ms);
+                    setViewMode("studio");
+                  }}
+                  meetingId={meeting.id}
+                  onUpdateSummary={(tmpl, content) => {
+                    setMeeting((prev) =>
+                      prev ? { ...prev, summary: { ...prev.summary, [tmpl]: content } } : null
+                    );
+                  }}
+                />
+              </div>
+
+              {/* Right: Action Items & Player Widget */}
+              <aside className="w-full lg:w-[420px] bg-[#0c0f17] p-6 overflow-y-auto space-y-6 shrink-0">
+                {/* Mini Audio Player Card */}
+                <div className="rounded-2xl overflow-hidden border border-white/8 shadow-xl bg-black">
+                  <VideoPlayer
+                    meeting={meeting}
+                    isPlaying={isPlaying}
+                    onPlayPause={handlePlayPause}
+                    currentTimeMs={currentTimeMs}
+                    durationMs={durationMs}
+                    onSeek={handleSeek}
+                    playbackRate={playbackRate}
+                    onPlaybackRateChange={handlePlaybackRateChange}
+                    activeSpeakerName={activeSpeakerName}
+                    highlights={highlights}
+                  />
+                </div>
+
+                {/* Speaker Stage Mini Matrix */}
+                {meeting.participants && meeting.participants.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-[#111522] border border-white/6">
+                    <SpeakerStage
+                      participants={meeting.participants}
+                      activeSpeakerName={activeSpeakerName}
+                      currentTimeMs={currentTimeMs}
+                      onSelectSpeaker={(speaker) => {
+                        setSelectedSpeakerFilter(speaker);
+                        setViewMode("studio");
+                        setStudioTab("transcript");
+                      }}
+                      selectedSpeaker={selectedSpeakerFilter}
+                    />
+                  </div>
+                )}
+
+                {/* Action Items Board */}
+                <div className="p-4 rounded-2xl bg-[#111522] border border-white/6">
+                  <ActionItemsView
+                    actionItems={actionItems}
+                    onToggleDone={handleToggleDone}
+                    onAddManualItem={handleAddManualItem}
+                    onSeek={handleSeek}
+                    highlights={highlights}
+                    onDeleteHighlight={handleDeleteHighlight}
+                  />
+                </div>
+              </aside>
+            </div>
+          )}
+
+          {/* MODE 2: STUDIO SPLIT MODE */}
+          {viewMode === "studio" && (
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+              {/* Left: Video Player & Speaker Stage */}
+              <div className="w-full lg:w-[55%] flex flex-col border-r border-white/6 bg-black overflow-y-auto">
                 <VideoPlayer
                   meeting={meeting}
                   isPlaying={isPlaying}
@@ -468,171 +755,123 @@ export default function CallPage({ params, searchParams }: CallPageProps) {
                   activeSpeakerName={activeSpeakerName}
                   highlights={highlights}
                 />
-              </div>
 
-              {/* Speaker Stage Mini Matrix */}
-              {meeting.participants && meeting.participants.length > 0 && (
-                <div className="p-4 rounded-2xl bg-[#111522] border border-white/6">
+                {meeting.participants && meeting.participants.length > 0 && (
                   <SpeakerStage
                     participants={meeting.participants}
                     activeSpeakerName={activeSpeakerName}
                     currentTimeMs={currentTimeMs}
-                    onSelectSpeaker={(speaker) => {
-                      setSelectedSpeakerFilter(speaker);
-                      setViewMode("studio");
-                      setStudioTab("transcript");
-                    }}
+                    onSelectSpeaker={setSelectedSpeakerFilter}
                     selectedSpeaker={selectedSpeakerFilter}
                   />
+                )}
+              </div>
+
+              {/* Right: Tabbed Panel (Transcript / Summary / Ask Fathom) */}
+              <div className="flex-1 flex flex-col bg-[#0a0d14] overflow-hidden">
+                {/* Studio Tabs Header */}
+                <div className="h-12 border-b border-white/6 px-6 flex items-center gap-6 bg-[#0c0f17] shrink-0 text-xs">
+                  <button
+                    onClick={() => setStudioTab("transcript")}
+                    className={`h-full font-bold uppercase tracking-wider transition-colors relative cursor-pointer flex items-center gap-1.5 ${
+                      studioTab === "transcript"
+                        ? "text-indigo-400"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <AlignLeft className="w-3.5 h-3.5" />
+                    <span>Transcript</span>
+                    {studioTab === "transcript" && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setStudioTab("summary")}
+                    className={`h-full font-bold uppercase tracking-wider transition-colors relative cursor-pointer flex items-center gap-1.5 ${
+                      studioTab === "summary"
+                        ? "text-indigo-400"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Summary</span>
+                    {studioTab === "summary" && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setStudioTab("ask")}
+                    className={`h-full font-bold uppercase tracking-wider transition-colors relative cursor-pointer flex items-center gap-1.5 ${
+                      studioTab === "ask"
+                        ? "text-indigo-400"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Ask AI</span>
+                    {studioTab === "ask" && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    )}
+                  </button>
                 </div>
-              )}
 
-              {/* Action Items Board */}
-              <div className="p-4 rounded-2xl bg-[#111522] border border-white/6">
-                <ActionItemsView
-                  actionItems={actionItems}
-                  onToggleDone={handleToggleDone}
-                  onAddManualItem={handleAddManualItem}
-                  onSeek={handleSeek}
-                  highlights={highlights}
-                  onDeleteHighlight={handleDeleteHighlight}
-                />
-              </div>
-            </aside>
-          </div>
-        )}
-
-        {/* MODE 2: STUDIO SPLIT MODE */}
-        {viewMode === "studio" && (
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-            {/* Left: Video Player & Speaker Stage */}
-            <div className="w-full lg:w-[55%] flex flex-col border-r border-white/6 bg-black overflow-y-auto">
-              <VideoPlayer
-                meeting={meeting}
-                isPlaying={isPlaying}
-                onPlayPause={handlePlayPause}
-                currentTimeMs={currentTimeMs}
-                durationMs={durationMs}
-                onSeek={handleSeek}
-                playbackRate={playbackRate}
-                onPlaybackRateChange={handlePlaybackRateChange}
-                activeSpeakerName={activeSpeakerName}
-                highlights={highlights}
-              />
-
-              {meeting.participants && meeting.participants.length > 0 && (
-                <SpeakerStage
-                  participants={meeting.participants}
-                  activeSpeakerName={activeSpeakerName}
-                  currentTimeMs={currentTimeMs}
-                  onSelectSpeaker={setSelectedSpeakerFilter}
-                  selectedSpeaker={selectedSpeakerFilter}
-                />
-              )}
-            </div>
-
-            {/* Right: Tabbed Panel (Transcript / Summary / Ask Fathom) */}
-            <div className="flex-1 flex flex-col bg-[#0a0d14] overflow-hidden">
-              {/* Studio Tabs Header */}
-              <div className="h-12 border-b border-white/6 px-6 flex items-center gap-6 bg-[#0c0f17] shrink-0 text-xs">
-                <button
-                  onClick={() => setStudioTab("transcript")}
-                  className={`h-full font-bold uppercase tracking-wider transition-colors relative cursor-pointer flex items-center gap-1.5 ${
-                    studioTab === "transcript"
-                      ? "text-indigo-400"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <AlignLeft className="w-3.5 h-3.5" />
-                  <span>Transcript</span>
+                {/* Tab Content */}
+                <div className="flex-1 overflow-y-auto">
                   {studioTab === "transcript" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    <TranscriptView
+                      segments={meeting.segments}
+                      participants={meeting.participants}
+                      currentTimeMs={currentTimeMs}
+                      onSeek={handleSeek}
+                      onAddHighlight={handleAddHighlight}
+                      onAddActionItem={(text) => handleAddManualItem(text, "From transcript")}
+                      highlights={highlights}
+                      meetingId={meeting.id}
+                    />
                   )}
-                </button>
-
-                <button
-                  onClick={() => setStudioTab("summary")}
-                  className={`h-full font-bold uppercase tracking-wider transition-colors relative cursor-pointer flex items-center gap-1.5 ${
-                    studioTab === "summary"
-                      ? "text-indigo-400"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Summary</span>
                   {studioTab === "summary" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    <SummaryView
+                      summaryMap={meeting.summary}
+                      onSeek={handleSeek}
+                      meetingId={meeting.id}
+                      onUpdateSummary={(tmpl, content) => {
+                        setMeeting((prev) =>
+                          prev ? { ...prev, summary: { ...prev.summary, [tmpl]: content } } : null
+                        );
+                      }}
+                    />
                   )}
-                </button>
-
-                <button
-                  onClick={() => setStudioTab("ask")}
-                  className={`h-full font-bold uppercase tracking-wider transition-colors relative cursor-pointer flex items-center gap-1.5 ${
-                    studioTab === "ask"
-                      ? "text-indigo-400"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Ask AI</span>
                   {studioTab === "ask" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
+                    <AskFathomView
+                      meetingTitle={meeting.title}
+                      meetingId={meeting.id}
+                      onSeek={handleSeek}
+                    />
                   )}
-                </button>
-              </div>
-
-              {/* Tab Content */}
-              <div className="flex-1 overflow-y-auto">
-                {studioTab === "transcript" && (
-                  <TranscriptView
-                    segments={meeting.segments}
-                    participants={meeting.participants}
-                    currentTimeMs={currentTimeMs}
-                    onSeek={handleSeek}
-                    onAddHighlight={handleAddHighlight}
-                    onAddActionItem={(text) => handleAddManualItem(text, "From transcript")}
-                    highlights={highlights}
-                  />
-                )}
-                {studioTab === "summary" && (
-                  <SummaryView
-                    summaryMap={meeting.summary}
-                    onSeek={handleSeek}
-                    meetingId={meeting.id}
-                    onUpdateSummary={(tmpl, content) => {
-                      setMeeting((prev) =>
-                        prev ? { ...prev, summary: { ...prev.summary, [tmpl]: content } } : null
-                      );
-                    }}
-                  />
-                )}
-                {studioTab === "ask" && (
-                  <AskFathomView
-                    meetingTitle={meeting.title}
-                    meetingId={meeting.id}
-                    onSeek={handleSeek}
-                  />
-                )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* MODE 3: FULL TRANSCRIPT MODE */}
-        {viewMode === "transcript" && (
-          <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0d14]">
-            <TranscriptView
-              segments={meeting.segments}
-              participants={meeting.participants}
-              currentTimeMs={currentTimeMs}
-              onSeek={handleSeek}
-              onAddHighlight={handleAddHighlight}
-              onAddActionItem={(text) => handleAddManualItem(text, "From transcript")}
-              highlights={highlights}
-            />
-          </div>
-        )}
-      </div>
+          {/* MODE 3: FULL TRANSCRIPT MODE */}
+          {viewMode === "transcript" && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0d14]">
+              <TranscriptView
+                segments={meeting.segments}
+                participants={meeting.participants}
+                currentTimeMs={currentTimeMs}
+                onSeek={handleSeek}
+                onAddHighlight={handleAddHighlight}
+                onAddActionItem={(text) => handleAddManualItem(text, "From transcript")}
+                highlights={highlights}
+                meetingId={meeting.id}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Share Modal */}
       <ShareModal

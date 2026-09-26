@@ -28,6 +28,13 @@ export default function SettingsPage() {
   const [notificationBanner, setNotificationBanner] = useState(true);
   const [autoCaptureZoom, setAutoCaptureZoom] = useState(false);
   const [autoCaptureMeet, setAutoCaptureMeet] = useState(false);
+  const [chatNoticeEnabled, setChatNoticeEnabled] = useState(true);
+  const [chatNoticeText, setChatNoticeText] = useState(
+    "🎙️ Fathom AI has joined to record notes & action items. Type /stop at any time to opt-out or pause recording."
+  );
+  const [audioConsentChime, setAudioConsentChime] = useState(true);
+  const [allowOptOutCommand, setAllowOptOutCommand] = useState(true);
+  const [autoRecordPolicy, setAutoRecordPolicy] = useState("manual_approval");
 
   const handleSaveBotName = (name: string) => {
     setBotName(name);
@@ -46,18 +53,192 @@ export default function SettingsPage() {
         <div className="border-b border-white/6 pb-6">
           <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
             <span>Workspace & Notetaker Settings</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-normal">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-normal">
               PRO ACCOUNT
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Configure bot capture policies, default AI summary templates, and video conference integrations.
+            Configure bot capture policies, recording consent transparency, default AI summary templates, and video conference integrations.
           </p>
+        </div>
+
+        {/* SECTION: RECORDING TRANSPARENCY & CONSENT GOVERNANCE */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Recording Transparency & Consent Governance</span>
+            </h2>
+            <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+              Active Protection
+            </span>
+          </div>
+
+          <div className="bg-[#111522] border border-white/6 rounded-2xl p-6 space-y-5">
+            <div>
+              <h3 className="text-xs font-bold text-white mb-1">
+                Auto-Record Policy & Permission Guard
+              </h3>
+              <p className="text-[11px] text-slate-400 mb-3">
+                Controls when Fathom is allowed to join meetings. Protects against unexpected or unannounced recordings (solves unwanted auto-recordings).
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setAutoRecordPolicy("manual_approval")}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    autoRecordPolicy === "manual_approval"
+                      ? "bg-indigo-600/15 border-indigo-500 text-white"
+                      : "bg-white/2 border-white/6 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center justify-between">
+                    <span>Manual Approval</span>
+                    {autoRecordPolicy === "manual_approval" && (
+                      <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Bot stays in lobby. Only records when you explicitly admit & record.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAutoRecordPolicy("scheduled_only")}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    autoRecordPolicy === "scheduled_only"
+                      ? "bg-indigo-600/15 border-indigo-500 text-white"
+                      : "bg-white/2 border-white/6 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center justify-between">
+                    <span>Scheduled Only</span>
+                    {autoRecordPolicy === "scheduled_only" && (
+                      <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Only joins calendar events. Never records ad-hoc or unscheduled calls.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAutoRecordPolicy("internal_only")}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    autoRecordPolicy === "internal_only"
+                      ? "bg-indigo-600/15 border-indigo-500 text-white"
+                      : "bg-white/2 border-white/6 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center justify-between">
+                    <span>Internal Team Only</span>
+                    {autoRecordPolicy === "internal_only" && (
+                      <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Auto-skips any call with external or guest participant email domains.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white block">
+                    In-Meeting Transparency Announcement
+                  </span>
+                  <p className="text-[11px] text-slate-400">
+                    Automatically posts a notice in Zoom / Google Meet chat as soon as the bot connects.
+                  </p>
+                </div>
+                <div
+                  onClick={() => setChatNoticeEnabled(!chatNoticeEnabled)}
+                  className={`w-8 h-4.5 rounded-full transition-colors relative flex items-center cursor-pointer ${
+                    chatNoticeEnabled ? "bg-emerald-500" : "bg-white/10"
+                  }`}
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${
+                      chatNoticeEnabled ? "translate-x-4" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {chatNoticeEnabled && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Custom Announcement Message
+                  </label>
+                  <textarea
+                    value={chatNoticeText}
+                    onChange={(e) => setChatNoticeText(e.target.value)}
+                    rows={2}
+                    className="w-full p-2.5 bg-[#161c2c] border border-white/8 focus:border-indigo-500/60 rounded-xl text-xs text-slate-200 outline-none resize-none"
+                  />
+                  <div className="p-2.5 rounded-xl bg-white/2 border border-white/4 flex items-center gap-2 text-[11px] text-slate-400">
+                    <span className="font-mono text-emerald-400">Preview in Chat:</span>
+                    <span className="italic text-slate-300 truncate">{chatNoticeText}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <span className="text-xs font-semibold text-white block">
+                    Spoken Recording Consent Chime
+                  </span>
+                  <p className="text-[11px] text-slate-400">
+                    Plays an audio prompt: &quot;Recording in progress&quot; so attendees on phone or without chat see/hear it.
+                  </p>
+                </div>
+                <div
+                  onClick={() => setAudioConsentChime(!audioConsentChime)}
+                  className={`w-8 h-4.5 rounded-full transition-colors relative flex items-center cursor-pointer ${
+                    audioConsentChime ? "bg-emerald-500" : "bg-white/10"
+                  }`}
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${
+                      audioConsentChime ? "translate-x-4" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <span className="text-xs font-semibold text-white block">
+                    Participant &quot;/stop&quot; Opt-Out Command
+                  </span>
+                  <p className="text-[11px] text-slate-400">
+                    Allows any meeting attendee to type <code className="text-indigo-300 font-mono">/stop</code> in meeting chat to instantly pause recording.
+                  </p>
+                </div>
+                <div
+                  onClick={() => setAllowOptOutCommand(!allowOptOutCommand)}
+                  className={`w-8 h-4.5 rounded-full transition-colors relative flex items-center cursor-pointer ${
+                    allowOptOutCommand ? "bg-emerald-500" : "bg-white/10"
+                  }`}
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${
+                      allowOptOutCommand ? "translate-x-4" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Global Auto-Record Scope Bar */}
         <div className="p-4 rounded-2xl bg-[#111522] border border-white/6 flex flex-wrap items-center gap-2.5 text-xs text-slate-300">
-          <span className="font-semibold text-white">Default Policy:</span>
+          <span className="font-semibold text-white">Default Sharing Policy:</span>
           <span>Auto-record</span>
           <div className="relative inline-block">
             <select

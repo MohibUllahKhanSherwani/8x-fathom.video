@@ -74,5 +74,29 @@ Log of all key technical decisions, trade-offs, and rationale for the Fathom clo
      - **Dynamic Meeting Intelligence Room (`/calls/[id]`)**: 3 adaptive viewing modes (Executive Briefing Mode, Split Studio Mode, Deep Transcript Mode), active speaker stage with audio wave pulse, color-coded multi-speaker timeline, and instant quote clipping.
      - **Cohesive Design System**: Deep obsidian / slate palette (`#0B0D13`, `#121620`, `#1A202E`), emerald and electric indigo accents, frosted glass layers, elevated typography, and fluid micro-interactions.
 
+### D-016: Customer Review & Complaint Resolutions (Product Improvements)
+- **Context**: 8x provided real customer complaints & 1-star reviews from Fathom users:
+  1. *Recording Consent/Awareness*: People being recorded without knowing; unwanted auto-recordings (258+ reviews).
+  2. *No Timestamp Linking*: Inability to jump/copy-link to a specific moment in the transcript from notes.
+  3. *UI Feels Cluttered / Overwhelming*: "Overwhelming knowing all the features," "UI layout is a bit weird".
+  4. *Summarization Accuracy with No Easy Fix*: AI gets facts/prices wrong and there is no visible way to correct/flag inline.
+- **Architectural & Product Decisions**:
+  1. **Recording Transparency & Consent Governance**:
+     - Pre-call automatic chat announcements with customizable opt-out commands (`/stop`).
+     - Explicit auto-record policy controls in `/settings` (`Manual Approval Only` as default, `Internal Only`, `Scheduled Only`) preventing unwanted bot intrusions.
+     - Live call Recording Transparency Badge with instant Pause / Resume and Emergency Session Purge.
+     - Per-participant consent status indicators (`✓ Consent Acknowledged`).
+  2. **Timestamp Deep-Linking & One-Click Moment Copy**:
+     - Support direct timestamp navigation in URLs (`/calls/[id]?t=1555`).
+     - "Copy Link to Moment" action on every transcript segment with visual clipboard confirmation.
+     - Clickable timestamp mentions in summaries and action items with automated player seek and transcript glow scroll.
+  3. **Zen / Calm Mode (Decluttering & Cognitive Ease)**:
+     - Introduced "Calm Mode" toggle on the call studio to strip away secondary telemetry, timelines, and multi-column clutter into an elegant, distraction-free reading experience.
+     - Streamlined top bar tools into structured overflow menus with contextual guidance.
+  4. **Human-in-the-Loop Inline AI Fact-Correction**:
+     - Inline Edit (`✎`) on every summary bullet, allowing instant manual overrides for hallucinated numbers or missed nuances, tagged with `✓ Verified / Edited by Human`.
+     - "Flag Inaccuracy / Fix with AI" (`⚑`) popover providing an on-the-fly correction prompt sent directly to Gemini to re-synthesize that section accurately.
+     - Source Evidence Link (`🔍`) on each point linking directly to supporting transcript segments.
+
 
 

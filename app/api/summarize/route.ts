@@ -8,7 +8,17 @@ const modelName = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 export async function POST(req: NextRequest) {
   try {
-    const { meetingId, template = "Enhanced", language = "en" } = await req.json();
+    const body = await req.json();
+    const {
+      meetingId,
+      template = "Enhanced",
+      language = "en",
+      action,
+      updatedContent,
+      originalBullet,
+      userCorrection,
+      context,
+    } = body;
 
     if (!meetingId) {
       return NextResponse.json({ error: "meetingId is required" }, { status: 400 });
@@ -19,6 +29,75 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Action A: Save Human-Edited Summary directly to database
+    if (action === "save_summary") {
+      if (!updatedContent) {
+        return NextResponse.json({ error: "updatedContent is required for save_summary" }, { status: 400 });
+      }
+
+      const { data, error: upsertError } = await supabase.from("summaries").upsert(
+        {
+          meeting_id: meetingId,
+          template,
+          language,
+          content: updatedContent,
+          model: "human-verified",
+        },
+        { onConflict: "meeting_id,template,language" }
+      ).select().single();
+
+      if (upsertError) {
+        return NextResponse.json({ error: upsertError.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, summary: updatedContent });
+    }
+
+    // Action B: Correct Fact using Gemini with user correction prompt against transcript
+    if (action === "correct_fact") {
+      if (!originalBullet || !userCorrection) {
+        return NextResponse.json(
+          { error: "originalBullet and userCorrection are required" },
+          { status: 400 }
+        );
+      }
+
+      const { data: segments } = await supabase
+        .from("segments")
+        .select("speaker, start_ms, text")
+        .eq("meeting_id", meetingId)
+        .order("start_ms", { ascending: true });
+
+      const transcriptSnippet = (segments || [])
+        .map((s) => `[${Math.floor(s.start_ms / 60000)}:${Math.floor((s.start_ms % 60000) / 1000).toString().padStart(2, "0")}] ${s.speaker || "Speaker"}: ${s.text}`)
+        .join("\n");
+
+      const correctionPrompt = `You are Fathom AI, an intelligent meeting notetaker.
+A user has flagged an inaccurate statement in the AI summary for this meeting.
+
+Original statement from summary:
+"${originalBullet}"
+
+User correction / flag:
+"${userCorrection}"
+
+Section Context: "${context || "Summary topic"}"
+
+Meeting Transcript:
+${transcriptSnippet.slice(0, 15000)}
+
+Task:
+Verify the user's correction against the transcript ground truth. Rewrite the statement to be completely accurate, factual, and concise, correcting any hallucinated numbers, names, or pricing.
+Return ONLY the single revised sentence/bullet as plain text without quotation marks, bullet symbols, or markdown formatting.`;
+
+      const { text: correctedText } = await generateGeminiContentWithRetry({
+        contents: correctionPrompt,
+      });
+
+      const cleanedText = (correctedText || originalBullet).replace(/^["'\s•\-*]+|["'\s]+$/g, "").trim();
+      return NextResponse.json({ correctedBullet: cleanedText });
+    }
 
     // 1. Check if summary already exists in database
     const { data: existingSummary } = await supabase

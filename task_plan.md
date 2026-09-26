@@ -50,3 +50,23 @@ Rebuild the frontend with our own original layout and visual design, keeping our
   - Production build passed: `npm run build` 17 routes generated cleanly.
   - Chrome DevTools MCP verified live in browser with screenshots.
   - Script kept local and `.gitignore` updated per user instruction.
+
+---
+
+## Phase 10: Customer Reviews & Complaints Resolution (8x Feedback)
+- [x] **10.1: Recording Consent, Awareness & Auto-Record Governance**
+  - Settings: Configurable auto-record policies (`Manual Approval Only`, `Internal Only`, `Scheduled Only`) and pre-call chat announcements.
+  - Call Page: Live Recording Status & Consent badge with pause/resume controls and participant consent indicators.
+- [x] **10.2: Direct Timestamp Deep-Linking & Copy-to-Moment**
+  - On every transcript line: "Copy Link to Moment" button (`🔗`) copying `?t=seconds`.
+  - On page load: URL query `?t=...` parsing, auto-seeking player and scrolling transcript with radiant highlight.
+  - In summary & notes: Timestamp mentions (`[MM:SS]`) with click-to-seek and copy-link triggers.
+- [x] **10.3: Calm / Zen Mode to Eliminate UI Clutter & Cognitive Overload**
+  - "Calm Mode" toggle on call page reducing visual noise, hiding secondary widgets, and presenting clean typography.
+  - Streamlined top bar actions with grouped popover menus and self-explanatory tooltips.
+- [x] **10.4: Inline AI Fact-Correction & Human-in-the-Loop Fixes**
+  - Inline Edit (`✎`) on summary bullets to directly correct hallucinated or inaccurate numbers/facts.
+  - "Flag Inaccuracy / Fix with AI" (`⚑`) popover to supply quick user corrections and re-synthesize targeted sections via Gemini.
+  - "Verify Source" (`🔍`) jump button to trace each AI summary point directly to transcript evidence.
+- [x] **10.5: QA, TypeScript & Build Pass**
+  - Validate TypeScript (`npx tsc --noEmit`), build (`npm run build`), test in browser, and commit alongside `.agent-logs/`.
