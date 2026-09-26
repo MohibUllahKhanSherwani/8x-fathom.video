@@ -72,7 +72,7 @@ Submission Target: 21 Sept 2026, 05:30 UTC
   - [x] Step 5: Meeting Intelligence Room (`/calls/[id]`, 3 adaptive viewing modes, living speaker stage, multi-speaker waveform timeline, sub-100ms synced transcript, multi-template summaries, interactive action items board)
   - [x] Step 6: Public Share & Clip portals (`/share/[token]`, `/clip/[token]`)
   - [x] Step 7: Landing page & marketing polish (`/`, executive product presentation)
-  - [x] Step 8: Build pass & local 1-minute intro video script for Mohib (`ONE_MINUTE_VIDEO_SCRIPT.md`)
+  - [x] Step 8: Build pass & deployment verification
 
 - [x] **Phase 10: Customer Reviews & Complaints Resolution (8x Feedback)**
   - [x] Step 1: Recording Consent, Awareness & Auto-Record Governance (Settings policy controls + call page live status badge + chat announcement transparency)

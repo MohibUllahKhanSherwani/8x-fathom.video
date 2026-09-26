@@ -90,4 +90,3 @@ Rebuild the frontend with our own original layout and visual design, keeping our
 - [x] **11.5: Strict Verification & Commit**
   - `npx tsc --noEmit` passed with 0 errors.
   - `npm run build` passed with 0 errors.
-  - Excluded `ONE_MINUTE_VIDEO_SCRIPT.md` from git.
