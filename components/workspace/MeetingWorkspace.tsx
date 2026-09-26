@@ -14,7 +14,8 @@ import {
   CheckSquare,
   Square,
   AlertCircle,
-  Edit3
+  Edit3,
+  Sparkles
 } from "lucide-react";
 import { Meeting, SummaryContent } from "@/lib/seed-meetings";
 
@@ -265,30 +266,39 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
   }, [meeting?.summary, generatedSummaries]);
 
   const activeSummary: SummaryContent | undefined =
-    summaryObj[selectedTemplate] || summaryObj["Enhanced"] || summaryObj["General"] || (meeting?.summary as unknown as SummaryContent);
+    summaryObj[selectedTemplate] ||
+    (selectedTemplate === "Enhanced" ? (meeting?.summary as unknown as SummaryContent) : undefined);
 
-  // Handle switching summary templates with real /api/summarize fallback
-  const handleSelectTemplate = async (tmplId: string) => {
+  // Switching templates simply switches view state without auto-triggering AI generation
+  const handleSelectTemplate = (tmplId: string) => {
     setSelectedTemplate(tmplId);
-    if (!summaryObj[tmplId] && meeting?.id) {
-      setIsGeneratingTemplate(true);
-      try {
-        const res = await fetch("/api/summarize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ meetingId: meeting.id, template: tmplId }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.summary) {
-            setGeneratedSummaries((prev) => ({ ...prev, [tmplId]: data.summary }));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to generate summary template:", err);
-      } finally {
-        setIsGeneratingTemplate(false);
+    setEditingTakeawayIdx(null);
+  };
+
+  const [templateError, setTemplateError] = useState<string | null>(null);
+
+  // Explicit button-triggered AI synthesis action
+  const handleGenerateSummary = async (tmplId: string) => {
+    if (!meeting?.id || isGeneratingTemplate) return;
+    setIsGeneratingTemplate(true);
+    setTemplateError(null);
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetingId: meeting.id, template: tmplId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.summary) {
+        setGeneratedSummaries((prev) => ({ ...prev, [tmplId]: data.summary }));
+      } else {
+        setTemplateError(data.error || "Failed to synthesize summary template.");
       }
+    } catch (err) {
+      console.error("Failed to generate summary template:", err);
+      setTemplateError("Network error while generating summary.");
+    } finally {
+      setIsGeneratingTemplate(false);
     }
   };
 
@@ -597,21 +607,35 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
                 <h2 className="font-serif-heading text-[19px] font-medium text-[#EDEBE6]">
                   Executive Summary &amp; Key Decisions
                 </h2>
-                {/* Template Selector Tabs */}
-                <div className="flex items-center gap-1 overflow-x-auto">
-                  {templates.map((tmpl) => (
+                {/* Template Selector Tabs & Regenerate Action */}
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <div className="flex items-center gap-1">
+                    {templates.map((tmpl) => (
+                      <button
+                        key={tmpl.id}
+                        onClick={() => handleSelectTemplate(tmpl.id)}
+                        className={`font-mono text-[11px] px-2.5 py-1 rounded-[4px] border transition-colors cursor-pointer whitespace-nowrap ${
+                          selectedTemplate === tmpl.id
+                            ? "border-[#EDEBE6] text-[#EDEBE6] bg-[#22252B] font-semibold"
+                            : "border-transparent text-[#8E929B] hover:text-[#EDEBE6] hover:bg-[#17191C]"
+                        }`}
+                      >
+                        {tmpl.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {activeSummary && (
                     <button
-                      key={tmpl.id}
-                      onClick={() => handleSelectTemplate(tmpl.id)}
-                      className={`font-mono text-[11px] px-2.5 py-1 rounded-[4px] border transition-colors cursor-pointer whitespace-nowrap ${
-                        selectedTemplate === tmpl.id
-                          ? "border-[#EDEBE6] text-[#EDEBE6] bg-[#22252B] font-semibold"
-                          : "border-transparent text-[#8E929B] hover:text-[#EDEBE6] hover:bg-[#17191C]"
-                      }`}
+                      onClick={() => handleGenerateSummary(selectedTemplate)}
+                      disabled={isGeneratingTemplate}
+                      title="Re-run AI synthesis for this template"
+                      className="font-mono text-[11px] px-2 py-1 rounded-[4px] border border-[#282B31] hover:border-[#EDEBE6] text-[#8E929B] hover:text-[#EDEBE6] transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
                     >
-                      {tmpl.label}
+                      <Sparkles className="w-3 h-3 text-[#C98A3E]" />
+                      <span>{isGeneratingTemplate ? "Generating..." : "Regenerate"}</span>
                     </button>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -619,6 +643,13 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
                 <div className="p-3 border border-[#282B31] rounded-[4px] bg-[#17191C] flex items-center gap-2 text-[12px] text-[#8E929B] font-mono">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-[#EDEBE6]" />
                   <span>Synthesizing {templates.find((t) => t.id === selectedTemplate)?.label} with AI...</span>
+                </div>
+              )}
+
+              {templateError && (
+                <div className="p-3 border border-red-500/40 rounded-[4px] bg-[#17191C] flex items-center gap-2 text-[12px] text-red-400 font-mono">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                  <span>{templateError}</span>
                 </div>
               )}
 
@@ -745,9 +776,25 @@ export function MeetingWorkspace({ initialMeetingId = "829997321" }: Props) {
                     </div>
                   )}
                 </div>
-              ) : (
-                <p className="text-[13px] text-[#8E929B]">No summary available.</p>
-              )}
+              ) : !isGeneratingTemplate ? (
+                <div className="border border-[#282B31] rounded-[4px] bg-[#17191C] p-6 space-y-4 text-left">
+                  <div className="space-y-1">
+                    <h3 className="font-serif-heading text-[16px] font-medium text-[#EDEBE6]">
+                      {templates.find((t) => t.id === selectedTemplate)?.label} Not Yet Generated
+                    </h3>
+                    <p className="text-[13px] text-[#8E929B] leading-relaxed max-w-xl">
+                      This template has not been synthesized for this session. Click below to generate an AI summary tailored specifically for {templates.find((t) => t.id === selectedTemplate)?.label}.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleGenerateSummary(selectedTemplate)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[4px] bg-[#C98A3E] hover:brightness-110 text-[#1C1E22] font-mono text-[12px] font-bold transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#1C1E22]" />
+                    <span>Generate {templates.find((t) => t.id === selectedTemplate)?.label}</span>
+                  </button>
+                </div>
+              ) : null}
             </section>
 
             {/* ================================================================= */}

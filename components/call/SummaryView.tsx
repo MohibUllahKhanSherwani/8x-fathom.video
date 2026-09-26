@@ -76,52 +76,39 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
     setTimeout(() => setFeedbackToast(null), 3500);
   };
 
-  // If selectedTemplate is not in mergedMap and meetingId is provided, generate via /api/summarize
-  useEffect(() => {
-    if (!meetingId) return;
-    if (mergedMap[selectedTemplate]) return;
+  // Explicit button-triggered summary generation
+  const handleGenerateSummary = async (tmplId: string = selectedTemplate) => {
+    if (!meetingId || isGenerating) return;
+    setIsGenerating(true);
+    setGenError(null);
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meetingId,
+          template: tmplId,
+          language: selectedLanguage === "Auto" ? "en" : selectedLanguage.toLowerCase(),
+        }),
+      });
 
-    let isCancelled = false;
-    async function fetchSummary() {
-      setIsGenerating(true);
-      setGenError(null);
-      try {
-        const res = await fetch("/api/summarize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            meetingId,
-            template: selectedTemplate,
-            language: selectedLanguage === "Auto" ? "en" : selectedLanguage.toLowerCase(),
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to generate summary");
-        }
-
-        if (!isCancelled && data.summary) {
-          setGeneratedSummaries((prev) => ({ ...prev, [selectedTemplate]: data.summary }));
-          onUpdateSummary?.(selectedTemplate, data.summary);
-        }
-      } catch (err: unknown) {
-        if (!isCancelled) {
-          const msg = err instanceof Error ? err.message : "Error generating summary";
-          setGenError(msg);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsGenerating(false);
-        }
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate summary");
       }
-    }
 
-    fetchSummary();
-    return () => {
-      isCancelled = true;
-    };
-  }, [selectedTemplate, selectedLanguage, meetingId, mergedMap, onUpdateSummary]);
+      if (data.summary) {
+        setGeneratedSummaries((prev) => ({ ...prev, [tmplId]: data.summary }));
+        onUpdateSummary?.(tmplId, data.summary);
+        showToast(`✨ Generated ${tmplId} summary successfully`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error generating summary";
+      setGenError(msg);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Persist updated summary to state and backend
   const persistSummaryUpdate = async (updated: SummaryContent, successMsg: string) => {
@@ -297,7 +284,7 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
 
       {/* Template & Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#101420] border border-white/6 sticky top-0 z-10 backdrop-blur-md">
-        {/* Template Pills */}
+        {/* Template Pills & Regenerate */}
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {templates.map((tmpl) => (
             <button
@@ -312,6 +299,18 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
               {tmpl.label}
             </button>
           ))}
+
+          {currentSummary && (
+            <button
+              onClick={() => handleGenerateSummary(selectedTemplate)}
+              disabled={isGenerating}
+              title="Re-run AI synthesis for this template"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/4 hover:bg-white/8 border border-white/6 text-xs text-slate-300 hover:text-white transition-all cursor-pointer font-medium disabled:opacity-50"
+            >
+              <Sparkles className="w-3 h-3 text-indigo-400" />
+              <span>{isGenerating ? "Generating..." : "Regenerate"}</span>
+            </button>
+          )}
         </div>
 
         {/* 1-Click Export Actions */}
@@ -787,6 +786,30 @@ export function SummaryView({ summaryMap, onSeek, meetingId, onUpdateSummary }: 
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Empty State / Not Yet Generated */}
+      {!currentSummary && !isGenerating && (
+        <div className="p-8 rounded-2xl bg-[#111522] border border-white/6 flex flex-col items-center justify-center gap-4 text-center">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div className="space-y-1 max-w-md">
+            <h3 className="text-base font-semibold text-white">
+              {templates.find((t) => t.id === selectedTemplate)?.label} Not Yet Generated
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              This template has not been synthesized for this session. Click below to generate an AI summary tailored specifically for {templates.find((t) => t.id === selectedTemplate)?.label}.
+            </p>
+          </div>
+          <button
+            onClick={() => handleGenerateSummary(selectedTemplate)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all cursor-pointer shadow-lg shadow-indigo-600/20"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Generate {templates.find((t) => t.id === selectedTemplate)?.label} Summary</span>
+          </button>
         </div>
       )}
     </div>
