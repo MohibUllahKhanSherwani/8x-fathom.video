@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useEffect, use } from "react";
 import Link from "next/link";
-import { Play, Pause, RotateCcw, Volume2, ArrowUpRight, Share2, Sparkles, Clock } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
+import { Play, Pause, RotateCcw, ArrowRight, Share2, Check } from "lucide-react";
 import { Meeting } from "@/lib/seed-meetings";
 
 interface ClipPageProps {
@@ -29,7 +28,7 @@ const PRESET_CLIPS: Record<string, ClipData> = {
     start_ms: 1470000,
     end_ms: 1620000,
     speaker: "Alex Rivera",
-    speakerColor: "#6366f1",
+    speakerColor: "#C98A3E",
     text: "Let's make the final call right now: we launch on November 18th. Aisha, please reschedule the sponsorships and press embargo.",
   },
   "pricing-matrix": {
@@ -39,7 +38,7 @@ const PRESET_CLIPS: Record<string, ClipData> = {
     start_ms: 2160000,
     end_ms: 2280000,
     speaker: "Carlos Ramirez",
-    speakerColor: "#f59e0b",
+    speakerColor: "#C98A3E",
     text: "We're keeping the free tier generous: unlimited recording for individuals. For teams, the Pro tier is $19 per user per month. I will have the finalized pricing sheet signed off by this Friday at 5 PM.",
   },
 };
@@ -73,7 +72,6 @@ export default function ClipPage({ params }: ClipPageProps) {
   }, [clip.meetingId]);
 
   const clipDurationMs = clip.end_ms - clip.start_ms;
-  const clipDurationSec = clipDurationMs / 1000;
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentClipMs, setCurrentClipMs] = useState(0);
@@ -87,7 +85,10 @@ export default function ClipPage({ params }: ClipPageProps) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      if (audioRef.current.currentTime < clip.start_ms / 1000 || audioRef.current.currentTime >= clip.end_ms / 1000) {
+      if (
+        audioRef.current.currentTime < clip.start_ms / 1000 ||
+        audioRef.current.currentTime >= clip.end_ms / 1000
+      ) {
         audioRef.current.currentTime = clip.start_ms / 1000;
       }
       audioRef.current.play().catch(() => {});
@@ -120,16 +121,15 @@ export default function ClipPage({ params }: ClipPageProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.currentTime = clip.start_ms / 1000;
-
     const onTimeUpdate = () => {
       const currentAbsMs = audio.currentTime * 1000;
       if (currentAbsMs >= clip.end_ms) {
         audio.pause();
         setIsPlaying(false);
         setCurrentClipMs(clipDurationMs);
-      } else if (currentAbsMs >= clip.start_ms) {
-        setCurrentClipMs(Math.round(currentAbsMs - clip.start_ms));
+      } else {
+        const offset = Math.max(0, currentAbsMs - clip.start_ms);
+        setCurrentClipMs(offset);
       }
     };
 
@@ -145,146 +145,122 @@ export default function ClipPage({ params }: ClipPageProps) {
 
   const progressPct = Math.min(100, (currentClipMs / clipDurationMs) * 100);
 
+  const formatMs = (ms: number) => {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
   return (
-    <div className="min-h-screen bg-[#090a0f] flex flex-col select-none text-slate-100">
-      {/* Top Bar */}
-      <header className="h-16 border-b border-white/6 bg-[#090a0f]/90 backdrop-blur-xl px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Logo href="/" />
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-xs text-indigo-300 font-medium">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Fathom Snippet</span>
+    <div className="min-h-screen bg-[#1C1E22] text-[#EDEBE6] font-sans antialiased selection:bg-[#C98A3E]/30 selection:text-[#EDEBE6]">
+      {/* Top Header */}
+      <header className="border-b border-[#282B31] bg-[#17191C]/80 backdrop-blur sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link
+              href="/"
+              className="font-serif-heading text-[18px] font-medium tracking-tight text-[#EDEBE6]"
+            >
+              Fathom
+            </Link>
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[#8E929B] hidden sm:inline">
+              Verified Clip
+            </span>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleCopyLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/8 text-xs text-white font-medium transition-colors cursor-pointer"
-          >
-            <Share2 className="w-3.5 h-3.5 text-slate-400" />
-            <span>{copied ? "Copied!" : "Share Snippet"}</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleCopyLink}
+              className="px-3 py-1.5 rounded-[4px] border border-[#282B31] hover:border-[#EDEBE6] text-[#EDEBE6] font-mono text-[11px] transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-[#C98A3E]" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span>{copied ? "Copied" : "Share Clip"}</span>
+            </button>
 
-          <Link
-            href={`/calls/${clip.meetingId}?t=${clip.start_ms}`}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-500/20"
-          >
-            <span>Watch Full Meeting</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
+            <Link
+              href={`/calls/${clip.meetingId}?t=${Math.floor(clip.start_ms / 1000)}`}
+              className="px-3.5 py-1.5 rounded-[4px] bg-[#C98A3E] hover:bg-[#d8974a] text-[#1C1E22] font-semibold text-[12px] transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Full Meeting</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Hidden Audio Element */}
+      {/* Audio element */}
       <audio ref={audioRef} src={meeting?.audio_url || ""} preload="metadata" />
 
-      {/* Main Clip Player Container */}
-      <main className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-2xl w-full bg-[#111522] border border-white/8 rounded-3xl p-8 shadow-2xl space-y-6">
-          {/* Header & Meeting Info */}
-          <div>
-            <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-              <span>Origin:</span>
-              <span className="font-semibold text-slate-200">{clip.meetingTitle}</span>
+      {/* Main Container */}
+      <main className="max-w-3xl mx-auto px-6 py-16 space-y-6 text-left">
+        <div className="border border-[#282B31] rounded-[4px] bg-[#17191C] p-8 space-y-6">
+          {/* Clip Meta */}
+          <div className="space-y-2 border-b border-[#282B31] pb-4">
+            <div className="flex items-center gap-2 font-mono text-[11px] text-[#8E929B]">
+              <span>Meeting: {clip.meetingTitle}</span>
               <span>•</span>
-              <span className="font-mono text-cyan-400">
-                {Math.floor(clip.start_ms / 60000)}:{Math.floor((clip.start_ms % 60000) / 1000).toString().padStart(2, "0")} -{" "}
-                {Math.floor(clip.end_ms / 60000)}:{Math.floor((clip.end_ms % 60000) / 1000).toString().padStart(2, "0")}
+              <span className="text-[#EDEBE6]">
+                {formatMs(clip.start_ms)} – {formatMs(clip.end_ms)}
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-white leading-snug">{clip.title}</h1>
+            <h1 className="font-serif-heading text-[24px] font-medium text-[#EDEBE6] leading-snug">
+              {clip.title}
+            </h1>
           </div>
 
           {/* Spoken Quote Box */}
-          <div className="p-6 bg-[#0c0f17] border border-white/6 rounded-2xl flex items-start gap-4 shadow-inner">
-            <div
-              style={{ backgroundColor: clip.speakerColor }}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm"
-            >
-              {clip.speaker.charAt(0)}
+          <div className="p-4 rounded-[4px] border border-[#282B31] bg-[#141619] space-y-2">
+            <div className="flex items-center justify-between text-[12px]">
+              <span className="font-serif-heading font-medium text-[#EDEBE6]">
+                {clip.speaker}
+              </span>
+              <span className="font-mono text-[11px] text-[#8E929B]">
+                {Math.round(clipDurationMs / 1000)}s clip
+              </span>
             </div>
-            <div className="space-y-1.5 flex-1">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-white">{clip.speaker}</span>
-                <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-indigo-400" />
-                  <span>{Math.round(clipDurationSec)}s snippet</span>
-                </span>
-              </div>
-              <p className="text-sm text-slate-200 leading-relaxed italic">
-                &ldquo;{clip.text}&rdquo;
-              </p>
-            </div>
+            <p className="text-[14px] text-[#EDEBE6] italic leading-relaxed">
+              &ldquo;{clip.text}&rdquo;
+            </p>
           </div>
 
-          {/* Clip Playback Controls */}
+          {/* Scrubber & Player Controls */}
           <div className="space-y-3 pt-2">
-            {/* Scrub Bar */}
             <div
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const pct = Math.max(0, Math.min(1, clickX / rect.width));
-                handleSeek(pct * clipDurationMs);
+                const ratio = (e.clientX - rect.left) / rect.width;
+                handleSeek(ratio * clipDurationMs);
               }}
-              className="relative h-2 bg-white/10 hover:h-2.5 rounded-full cursor-pointer transition-all group"
+              className="h-2 bg-[#282B31] rounded-[2px] cursor-pointer relative overflow-hidden"
             >
               <div
+                className="h-full bg-[#EDEBE6]"
                 style={{ width: `${progressPct}%` }}
-                className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full relative"
-              >
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+              />
             </div>
 
-            {/* Time & Play Buttons */}
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span className="font-mono">
-                {Math.floor(currentClipMs / 1000)}s / {Math.floor(clipDurationSec)}s
-              </span>
-
+            <div className="flex items-center justify-between text-[12px] font-mono text-[#8E929B]">
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleRestart}
-                  className="p-2 rounded-full hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                  title="Restart snippet"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-
-                <button
                   onClick={handlePlayPause}
-                  className="w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl shadow-indigo-500/25"
+                  className="w-8 h-8 rounded-[4px] border border-[#282B31] bg-[#1C1E22] hover:bg-[#22252B] text-[#EDEBE6] flex items-center justify-center transition-colors cursor-pointer"
                 >
-                  {isPlaying ? (
-                    <Pause className="w-5 h-5 fill-white" />
-                  ) : (
-                    <Play className="w-5 h-5 fill-white ml-0.5" />
-                  )}
+                  {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+                </button>
+                <button
+                  onClick={handleRestart}
+                  className="text-[#8E929B] hover:text-[#EDEBE6] p-1.5 transition-colors cursor-pointer"
+                  title="Restart Clip"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <Volume2 className="w-4 h-4" />
-                <span>Audio Wave</span>
+              <div>
+                <span className="text-[#EDEBE6]">{formatMs(currentClipMs)}</span> / {formatMs(clipDurationMs)}
               </div>
             </div>
-          </div>
-
-          {/* Bottom Banner */}
-          <div className="pt-4 border-t border-white/6 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-400">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span>Synthesized with Fathom AI</span>
-            </div>
-
-            <Link
-              href="/demo"
-              className="text-indigo-400 hover:text-indigo-300 font-semibold"
-            >
-              Explore Sandbox Demo →
-            </Link>
           </div>
         </div>
       </main>
